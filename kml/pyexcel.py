@@ -152,7 +152,7 @@ def createXls(datalist, dir, filename="test", date=""):
         table.write(i, 10, pm.speedlimit)
         table.write(i, 12, pm.account)
         table.write(i, 13, u"12月")
-        table.write(i, 14, u"张志锋")
+        table.write(i, 14, u"张宝茹")
         table.write(i, 15, date)
         table.write(i, 18, pm.cost)
         i += 1

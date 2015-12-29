@@ -1,9 +1,11 @@
 #coding=utf-8
 import math
+import sys
 
 Ea = 6378137
 Eb = 6356725
 distDict = {"0":100, "1":100, "16":100}
+MAX_INT = sys.maxint
 
 
 def rad(d):
@@ -49,26 +51,26 @@ def checkDistance(p, dog, space=50):
 def checkMatchFromDogList(placemark, dog_list):
 	if placemark.handletype == "1":      #是新增类型返回
 		return
-
+	min_dist = MAX_INT
 	catch = 0
 	for dog in dog_list:
-		if getDist2(placemark.longitude, placemark.latitude, dog.longitude, dog.latitude) <= 10:
-			if placemark.match == "?":
-				catch = 1
-				placemark.match = dog.id
-				placemark.longitude = dog.longitude
-				placemark.latitude = dog.latitude
-				placemark.heading = dog.heading
-				break
-			elif placemark.match == dog.id:
+		dist = getDist2(placemark.longitude, placemark.latitude, dog.longitude, dog.latitude)
+		if dist <= 10:
+			if placemark.match == dog.id:
 				catch = 1
 				break
 			else:
-				catch = 1
-				print u"匹配有误："+placemark.name+" match "+dog.id
+				if dist < min_dist:
+					min_dist = dist
+					catch = 1
+					placemark.match = dog.id
+					placemark.longitude = dog.longitude
+					placemark.latitude = dog.latitude
+					placemark.heading = dog.heading
+	#print u"匹配："+placemark.id+" match "+placemark.match
 
-	if not catch:  #没有匹配到，则可能是多余的修改操作
-		print u"匹配到不存在的狗id："+placemark.name
+	if not catch and placemark.match == "?":  #没有匹配到，则可能是多余的修改操作
+		print u"未匹配的点："+placemark.name
 
 
 

@@ -9,9 +9,9 @@ import kmlparse2
 from lonlat_util import *
 from process import *
 
-dir = u"E:/dataD/2015/12月/1216/test/"
+dir = u"E:/dataD/2015/12月/1228/"
 
-filename = "PND_zzf_left.kml"
+filename = "caiji_zbr_2015_12_28.kml"
 
 path = dir + filename
 
@@ -20,9 +20,10 @@ original_dog_list = readDogIdFromExcel(dir + "dog_detail.xls")
 #print original_dog_list
 
 dog_list = []
-list, handle_list, dog_list = kmlparse2.parse_pnd(path)
+#list, handle_list, dog_list = kmlparse2.parse_pnd(path)
+list, handle_list, dog_list = kmlparse2.parse_caiji(path)
 
-pmlist = proc_mod(list, id_for_fee, original_dog_list, dog_list, "test_zzf")
+pmlist = proc_mod(list, id_for_fee, original_dog_list, dog_list, "test_zbr")
 
 print len(handle_list),len(list),len(dog_list)
 
@@ -30,6 +31,6 @@ print len(handle_list),len(list),len(dog_list)
 # 	print p.name
 
 
-createXls(pmlist, dir, "test_left", "2015-12-16")
+createXls(pmlist, dir, "caiji_zbr_2015_12_28", "2015-12-28")
 
 

@@ -13,17 +13,17 @@ import sys
 
 EXT = ".kml"
 
-date = "2015_12_28"
+date = "2015_12_26"
 
-dir = u"E:/dataD/2015/12月/1228/"
+dir = u"E:/dataD/2015/12月/1226/"
 
 #filename = u"PNDCJ_" + date + u"_22pm"
-filename = u"CAIJI_2015_12_28_21pm"
+filename = u"CAIJI_2015_12_26_21pm"
 
 path = dir + filename + EXT
 
-docname = u'PND\u91c7\u96c6[' + date[5:] + '_21-00 ~ ' + date[5:] + '_ 20-59]'
-fodername = u'PND\u91c7\u96c6[' + date[5:] + '_21-00 ~ ' + date[5:] + '_ 20-59]'
+docname = u'CAIJI\u91c7\u96c6[' + date[5:] + '_21-00 ~ ' + date[5:] + '_ 20-59]'
+fodername = u'CAIJI\u91c7\u96c6[' + date[5:] + '_21-00 ~ ' + date[5:] + '_ 20-59]'
 
 pm_list = []
 
