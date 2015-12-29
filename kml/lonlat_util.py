@@ -37,13 +37,9 @@ def getDist2(lon1, lat1, lon2, lat2):
 	return s * Ea
 
 
-def checkFormForDist(form, distance):
-	if form in distDict:
-		if distance < distDict[form]:
-			return True
-		else:
-			return False
-	elif distance < 50:
+def checkDistance(p, dog, space=50):
+	distance = getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude)
+	if distance <= space:
 		return True
 	else:
 		return False
@@ -60,6 +56,9 @@ def checkMatchFromDogList(placemark, dog_list):
 			if placemark.match == "?":
 				catch = 1
 				placemark.match = dog.id
+				placemark.longitude = dog.longitude
+				placemark.latitude = dog.latitude
+				placemark.heading = dog.heading
 				break
 			elif placemark.match == dog.id:
 				catch = 1

@@ -9,14 +9,16 @@ from pyexcel import *
 from process import *
 from kmlparse2 import *
 import codecs
+import sys
 
 EXT = ".kml"
 
-date = "2015_12_22"
+date = "2015_12_16"
 
-dir = u"D:/code/"
+dir = u"E:/dataD/2015/12月/1216/"
 
-filename = u"PNDCJ_" + date + u"_22pm"
+#filename = u"PNDCJ_" + date + u"_22pm"
+filename = u"PNDCJ_2015_12_16_22pm"
 
 path = dir + filename + EXT
 
@@ -27,11 +29,15 @@ pm_list = []
 
 list, handle_list, dog_list = kmlparse2.parse_pnd(path)
 
+print len(handle_list)
 operate(list, dir, dog_list)
-
+#
+# for p in list:
+# 	if p.handletype == "3":
+# 		print p.name, p.matchlist
 
 #输入预处理的kml
-outputKml((list, handle_list, dog_list), docname, fodername, dir, "test"+filename, 1)
+outputKml((list, handle_list, dog_list), docname, fodername, dir, "test_zzf_"+filename+"_"+date[5:], 1)
 
 
 

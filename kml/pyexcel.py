@@ -39,6 +39,7 @@ formdict = {"0":u"0闯红灯照相",
     "33":u"33山区路段",
     "34":u"34冰雪路段",
     "28":u"28收费站",
+    "29":u"休息区",
     "25":u"25高速出口",
     "35":u"35检查站"}
 
@@ -151,7 +152,7 @@ def createXls(datalist, dir, filename="test", date=""):
         table.write(i, 10, pm.speedlimit)
         table.write(i, 12, pm.account)
         table.write(i, 13, u"12月")
-        table.write(i, 14, u"张宝茹")
+        table.write(i, 14, u"张志锋")
         table.write(i, 15, date)
         table.write(i, 18, pm.cost)
         i += 1
@@ -216,6 +217,7 @@ def createXlsForDog(list, dir, filename="dog_detail"):
         sheet.write(i, 2, p.latitude)
         sheet.write(i, 3, p.heading)
         sheet.write(i, 4, p.speedlimit)
+        sheet.write(i, 5, p.form)
         i += 1
     table.save(dir+"/"+filename+".xls")
 
@@ -230,6 +232,7 @@ def readDogIdFromExcel(file):
         dog.latitude = table.row_values(row)[2]
         dog.heading = table.row_values(row)[3]
         dog.speedlimit = table.row_values(row)[4]
+        dog.form = table.row_values(row)[5]
         doglist.append(dog)
     return doglist
 

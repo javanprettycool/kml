@@ -39,6 +39,8 @@ def transfor(pm, distance, angle):
 
 
 def transfromlist(list, direction):
+	if direction == 1:
+		return
 	for j in range(0, direction):
 		if j % 2 != 0:
 			transfor(list[j], 40, list[j].heading)
@@ -48,7 +50,7 @@ def transfromlist(list, direction):
 
 def handleForList(list):
 	length = len(list)
-	if length == 1 or length == 0:
+	if length <= 1:
 		return False
 	else:
 		transfromlist(list, length)
@@ -127,14 +129,16 @@ def proc_del(list, doglist, offset=20):
 	dog_shadow = []
 	dog_list = []
 	for p in list:
+		min_dis = MAX_INT
+		dog_shadow = []
 		for dog in doglist:
-			if dog.id == p.match or (p.form == dog.form and checkFormForDist(p.form, getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude))):
+			if dog.id == p.match or (p.form == dog.form and checkDistance(p, dog, 50)):
 				distance = getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude)
 				if (0 <= p.heading < offset and (0 <= dog.heading < p.heading+offset or (p.heading-offset)%360 < dog.heading <= 360)) \
 					or (360-offset < p.heading <= 360 and (0 <= dog.heading < (p.heading+offset) % 360 or p.heading-offset < dog.heading <= 360)) \
 					or (p.heading-offset < dog.heading < p.heading+offset):
 					p.matchlist.append(dog.id + ":" + str(distance))
-					dog_list.append(dog)
+					#dog_list.append(dog)
 					if distance < min_dis:
 						min_dis = distance
 						dog_shadow = [dog.id, dog.longitude, dog.latitude]       #匹配距离最近的狗id
@@ -143,8 +147,6 @@ def proc_del(list, doglist, offset=20):
 			p.match = dog_shadow[0]
 			p.longitude = dog_shadow[1]
 			p.latitude = dog_shadow[2]
-			dog_shadow = []
-			min_dis = MAX_INT
 	return del_set
 
 
@@ -154,14 +156,16 @@ def proc_update(list, doglist, offset=20):
 	dog_shadow = []
 	dog_list = []
 	for p in list:
+		min_dis = MAX_INT
+		dog_shadow = []
 		for dog in doglist:
-			if dog.id == p.match or checkFormForDist(p.form, getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude)):
+			if dog.id == p.match or checkDistance(p, dog, 50):
 				distance = getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude)
 				if (0 <= p.heading < offset and (0 <= dog.heading < p.heading+offset or (p.heading-offset)%360 < dog.heading <= 360)) \
 					or (360-offset < p.heading <= 360 and (0 <= dog.heading < (p.heading+offset) % 360 or p.heading-offset < dog.heading <= 360)) \
 					or (p.heading-offset < dog.heading < p.heading+offset):
 					p.matchlist.append(dog.id + ":" + str(distance))
-					dog_list.append(dog)
+					#dog_list.append(dog)
 					if distance < min_dis:
 						min_dis = distance
 						dog_shadow = [dog.id, dog.longitude, dog.latitude, dog.heading]
@@ -171,8 +175,6 @@ def proc_update(list, doglist, offset=20):
 			p.longitude = dog_shadow[1]
 			p.latitude = dog_shadow[2]
 			p.heading = dog_shadow[3]
-			dog_shadow = []
-			min_dis = MAX_INT
 	return update_set
 
 
@@ -190,12 +192,7 @@ def operate(list, dir, dog_list):
 				handle_list.append(p)
 			else:
 				handle_type = handle_list[-1].handletype
-				if handle_type == "1":
-					add(handle_list)
-				elif handle_type == "2":
-					update(handle_list, dog)
-				elif handle_type == "3":
-					delete(handle_list, dog)
+				handle(handle_type, handle_list, dog)
 				id_for_fee_list.append(pre.id)
 				pre = p
 				handle_list =[p]
@@ -203,8 +200,8 @@ def operate(list, dir, dog_list):
 			pass
 
 	if len(handle_list) != 0:    #鏀跺熬
-		if len(handle_list) > 1:
-			transfromlist(handle_list, len(handle_list))
+		if len(handle_list) >= 1:
+			handle(handle_list[-1].handletype, handle_list, dog)
 			id_for_fee_list.append(handle_list[-1].id)
 		else:
 			pass
@@ -214,6 +211,15 @@ def operate(list, dir, dog_list):
 
 	#鍘熺嫍id琛�
 	createXlsForDog(dog_list, dir)
+
+
+def handle(handle_type, handle_list, dog_list):
+	if handle_type == "1":
+		add(handle_list)
+	elif handle_type == "2":
+		update(handle_list, dog_list)
+	elif handle_type == "3":
+		delete(handle_list, dog_list)
 
 
 def add(list):
@@ -231,12 +237,11 @@ def update(list, dog_list):
 
 
 def delete(list, dog_list):
-	form = list[-1].form
-	if form == "1":
-		pass
-	else:
-		#handleForList(list)
-		proc_del(list, dog_list)
+	#form = list[-1].form
+	for p in list:
+		if p.match == "?":
+			transfor(p, 30, p.heading)
+	proc_del(list, dog_list)
 
 
 #dog_id 鍒濆鐨勭嫍id琛紝 dog_list澶勭悊杩囧悗鐨勭嫍琛�
@@ -269,6 +274,9 @@ def checkChange(pm, dog):
 		return True
 	elif pm.speedlimit != dog.speedlimit:
 		return True
+	elif pm.form != dog.form:
+		print dog.form
+		return True
 	else:
 		return False
 
@@ -289,5 +297,6 @@ def createElement(operate, dog, operator_name):
 	pm.longitude = dog.longitude
 	pm.latitude = dog.latitude
 	pm.heading = dog.heading
+	pm.form = dog.form
 	pm.account = operator_name
 	return pm

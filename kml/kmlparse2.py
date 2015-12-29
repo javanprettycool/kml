@@ -143,7 +143,7 @@ def get_namespace(element):
     return m.group(0) if m else ''
 	
 
-def parse_pnd(path):
+def parse_pnd(path, operator_name="test_zzf"):
     list = []
     dog_list = []
     handle_list = []
@@ -184,7 +184,7 @@ def parse_pnd(path):
                         #pm.match = node.text.split("_")[3][1:-1]
                         pm.form = node.text.split("_")[0]
                         pm.speedlimit = node.text.split("_")[1]
-                        pm.account = "test_zbr"
+                        pm.account = operator_name
                         handle_list.append(pm)
                 if node.tag == '{0}LookAt'.format(namespace):
                     for data in node.getchildren():
@@ -206,8 +206,10 @@ def parse_pnd(path):
     return list, handle_list, dog_list
 
 
-def parse_caiji(path):
+def parse_caiji(path, operator_name="test_zzf"):
         list = []
+        handle_list = []
+        dog_list = []
         tree = etree.parse(path)
         #print(etree.tostring(tree, pretty_print=True, encoding='utf-8'))
         namespace = get_namespace(tree.getroot())
@@ -224,20 +226,35 @@ def parse_caiji(path):
                             pm.form = node.text.split("_")[4].split("(")[1].split(")")[0]
                             pm.speedlimit = node.text.split("_")[6][2:]
                             pm.account = node.text.split("_")[8][1:-12]
-                        else:
+                            handle_list.append(pm)
+                        elif node.text[1] == u"狗":
                             pm.dogtype = "server"
                             pm.id = node.text.split("_")[1][:-1]
                             pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
+                            dog_list.append(pm)
+                        else:
+                            pm.dogtype = "new"                                      #操作员手动新增的点
+                            #pm.id = node.text.split("_")[1][:-1]
+                            pm.handletype = "1"
+                            #pm.match = node.text.split("_")[3][1:-1]
+                            pm.form = node.text.split("_")[0]
+                            pm.speedlimit = node.text.split("_")[1]
+                            pm.account = operator_name
+                            handle_list.append(pm)
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
-                            if data.tag == '{0}longitude'.format(namespace):
-                                pm.longitude = float(data.text)
-                            if data.tag == '{0}latitude'.format(namespace):
-                                pm.latitude = float(data.text)
                             if data.tag == '{0}heading'.format(namespace):
-                                pm.heading = float(data.text)
+                                pm.heading = round(float(data.text))
+                                if (pm.heading<0):
+                                    pm.heading = 360 + pm.heading
+                    if node.tag == '{0}Point'.format(namespace):
+                        for data in node.getchildren():
+                            if data.tag == '{0}coordinates'.format(namespace):
+                                part = data.text.split(",")
+                                pm.longitude = float("%.6f" % float(part[0]))
+                                pm.latitude = float("%.6f" % float(part[1]))
                 list.append(pm)
-        return list
+        return list, handle_list, dog_list
 
 
 def parse_ts(path):
