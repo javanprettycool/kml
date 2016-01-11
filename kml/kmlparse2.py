@@ -10,6 +10,7 @@ import re
 import xlwt
 import sys
 import codecs
+import os
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -37,6 +38,8 @@ def createPM(pm):
           KML.coordinates("%.6f" % longitude + "," + "%.6f" % latitude + ",0"),
         ),
       )
+
+
 def isDog(type):
     if type == "server":
         return True
@@ -257,7 +260,8 @@ def parse_caiji(path, operator_name="test_zzf"):
         return list, handle_list, dog_list
 
 
-def parse_ts(path):
+def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
+        dir = os.path.dirname(path)
         list = []
         tree = etree.parse(path)
         namespace = get_namespace(tree.getroot())
@@ -266,12 +270,16 @@ def parse_ts(path):
                 pm = placemark()
                 for node in elem.getchildren():
                     if node.tag == '{0}name'.format(namespace):
+                        if node.text == u"未命名路径":
+                            break
                         pm.name = node.text
                         pm.dogtype = "server"
-                        pm.id = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
+                        pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
                         pm.handletype = "2"
                         pm.form = node.text.split("_")[2].split("-")[1][5:-1]
+                        pm.account = "test_zzf"
                         pm.speedlimit = int(node.text.split("_")[-1][6:-1])
+                        list.append(pm)
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
                             if data.tag == '{0}longitude'.format(namespace):
@@ -280,29 +288,23 @@ def parse_ts(path):
                                 pm.latitude = float(data.text)
                             if data.tag == '{0}heading'.format(namespace):
                                 pm.heading = float(data.text)
-                list.append(pm)
         if not list:
             print "no data today"
             return
-        font = xlwt.Font()
-        font.name = 'SimSun'
-        style = xlwt.XFStyle()
-        style.font = font
-        file = xlwt.Workbook()
-        table = file.add_sheet(u'投诉数据', cell_overwrite_ok=True)
-        i = 0
-        for pm in list:
-            if (pm.form == u"测速" or pm.form == u"高清头" or pm.form == u"流动测速")and pm.speedlimit > 100:
-                table.write(i, 1, pm.handletype)
-                table.write(i, 3, pm.id)
-                table.write(i, 4, pm.form)
-                table.write(i, 10, "100")
-                table.write(i, 12, "test_zzf")
-                table.write(i, 13, u"11月")
-                table.write(i, 14, u"张志锋")
-                table.write(i, 15, "2015-12-11")
-                i += 1
-        file.save('e:/tt.xls')
+
+        handle_list = [x for x in list]
+        for p in handle_list:
+            if p.form != u"测速" :
+                list.remove(p)
+            else:
+                if p.speedlimit >= 60:
+                    list.remove(p)
+                else:
+                    p.speedlimit = 60
+                    p.form = "1"
+
+
+        createXls(list, dir, filename, date, operator_name)
 
 def outputKml(handle_tuple, docname, fodername, dir, filename, segment=1):
     whole_pm_list = []

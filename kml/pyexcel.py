@@ -4,6 +4,7 @@ __author__ = 'Tiny'
 import xlrd
 import xlwt
 import time
+import sys
 from placemark import *
 
 formdict = {"0":u"0闯红灯照相",
@@ -129,7 +130,7 @@ def setTableStyle(table):
 
 
 
-def createXls(datalist, dir, filename="test", date=""):
+def createXls(datalist, dir, filename="test", date="", operator_name=u"张志锋"):
     if not datalist:
         print "no data today"
         return
@@ -142,19 +143,22 @@ def createXls(datalist, dir, filename="test", date=""):
 
     i = 3
     for pm in datalist:
-        table.write(i, 1, gethandletype(pm.handletype))
-        table.write(i, 2, pm.id)
-        table.write(i, 3, pm.match)
-        table.write(i, 4, getform(pm.form))
-        table.write(i, 5, "%.6f"%pm.longitude)
-        table.write(i, 6, "%.6f"%pm.latitude)
-        table.write(i, 9, pm.heading)
-        table.write(i, 10, pm.speedlimit)
-        table.write(i, 12, pm.account)
-        table.write(i, 13, u"12月")
-        table.write(i, 14, u"张宝茹")
-        table.write(i, 15, date)
-        table.write(i, 18, pm.cost)
+        if checkForList(pm):
+            table.write(i, 1, gethandletype(pm.handletype))
+            table.write(i, 2, pm.id)
+            table.write(i, 3, pm.match)
+            table.write(i, 4, getform(pm.form))
+            table.write(i, 5, "%.6f"%pm.longitude)
+            table.write(i, 6, "%.6f"%pm.latitude)
+            table.write(i, 9, pm.heading)
+            table.write(i, 10, pm.speedlimit)
+            table.write(i, 12, pm.account)
+            table.write(i, 13, date.split("-")[1]+u"月")
+            table.write(i, 14, operator_name)
+            table.write(i, 15, date)
+            table.write(i, 18, pm.cost)
+        else:
+            sys.exit()
         i += 1
     file.save(dir+"/"+filename+".xls")
 
@@ -243,6 +247,7 @@ def readFeeFromExcel(file):
 
 def getform(num):
     global formdict
+    num = str(num)
     if num in formdict:
         return formdict[num]
     else :
@@ -253,3 +258,17 @@ def gethandletype(num):
     if num is "":
         return None
     return handletypedict[num]
+
+
+def checkForList(pm):
+    if isinstance(pm, placemark):
+        if pm.handletype == 2 or pm.handletype == 3:
+            if pm.match != "?" or pm.match != "":
+                return True
+            else:
+                print u"没有匹配的点：" + pm.name
+        else:
+            return True
+    else:
+        return False
+

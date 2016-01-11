@@ -13,12 +13,12 @@ import sys
 
 EXT = ".kml"
 
-date = "2015_12_26"
+date = "2015_12_24"
 
-dir = u"E:/dataD/2015/12月/1226/"
+dir = u"E:/dataD/2015/12月/1224/"
 
 #filename = u"PNDCJ_" + date + u"_22pm"
-filename = u"CAIJI_2015_12_26_21pm"
+filename = u"CAIJI_" + date + u"_21pm"
 
 path = dir + filename + EXT
 
@@ -30,14 +30,14 @@ pm_list = []
 list, handle_list, dog_list = kmlparse2.parse_caiji(path)
 
 print len(handle_list)
-operate(list, dir, dog_list)
+operate(list, dir+"caiji/", dog_list)
 #
 # for p in list:
 # 	if p.handletype == "3":
 # 		print p.name, p.matchlist
 
 #输入预处理的kml
-outputKml((list, handle_list, dog_list), docname, fodername, dir, "test_zbr_"+filename+"_"+date[5:], 1)
+outputKml((list, handle_list, dog_list), docname, fodername, dir+"caiji/", "new_"+filename+"_"+date[5:], 1)
 
 
 

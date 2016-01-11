@@ -49,28 +49,46 @@ def checkDistance(p, dog, space=50):
 
 #检查修改和删除的匹配
 def checkMatchFromDogList(placemark, dog_list):
-	if placemark.handletype == "1":      #是新增类型返回
-		return
 	min_dist = MAX_INT
 	catch = 0
-	for dog in dog_list:
-		dist = getDist2(placemark.longitude, placemark.latitude, dog.longitude, dog.latitude)
-		if dist <= 10:
-			if placemark.match == dog.id:
-				catch = 1
-				break
-			else:
-				if dist < min_dist:
-					min_dist = dist
+	dog_list_copy = [x for x in dog_list]
+	delete_list = []
+	if placemark.handletype == "1":      #是新增类型返回
+		pass
+
+	elif placemark.handletype == "2":
+		for dog in dog_list_copy:
+			dist = getDist2(placemark.longitude, placemark.latitude, dog.longitude, dog.latitude)
+			if dist <= 10:
+				if placemark.match == dog.id:
 					catch = 1
-					placemark.match = dog.id
-					placemark.longitude = dog.longitude
-					placemark.latitude = dog.latitude
-					placemark.heading = dog.heading
+					break
+				else:
+					if dist < min_dist:
+						min_dist = dist
+						catch = 1
+						placemark.match = dog.id
+						placemark.longitude = dog.longitude
+						placemark.latitude = dog.latitude
+						placemark.heading = dog.heading
 	#print u"匹配："+placemark.id+" match "+placemark.match
+
+	elif placemark.handletype == "3":
+		for dog in dog_list_copy:
+			dist = getDist2(placemark.longitude, placemark.latitude, dog.longitude, dog.latitude)
+			if dist <= 10:
+
+				if placemark.match == dog.id:
+					catch = 1
+				else:
+					delete_list.append(dog)
+					dog_list.remove(dog)
+					print dog.name
 
 	if not catch and placemark.match == "?":  #没有匹配到，则可能是多余的修改操作
 		print u"未匹配的点："+placemark.name
+
+	return delete_list
 
 
 

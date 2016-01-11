@@ -156,7 +156,7 @@ n_style.alignment = alignment
 
 
 
-r1 = re.compile('.xls')
+r1 = re.compile('.xls|.xlsx')
 path = unicode(dir,  "utf8")
 row = 0
 alllist = []

@@ -6,6 +6,7 @@ import sys
 from lonlat_util import *
 from pyexcel import *
 from placemark import placemark
+import os
 
 MAX_INT = sys.maxint
 
@@ -206,6 +207,9 @@ def operate(list, dir, dog_list):
 		else:
 			pass
 
+	if not os.path.exists(dir):
+		os.makedirs(dir)
+
 	#璐圭敤id琛�
 	createXlsForFee(id_for_fee_list, dir)
 
@@ -247,12 +251,13 @@ def delete(list, dog_list):
 #dog_id 鍒濆鐨勭嫍id琛紝 dog_list澶勭悊杩囧悗鐨勭嫍琛�
 def proc_mod(list, id_for_fee_list, original_dog_list, dog_list, operator_name):
 	pmlist = []
+	delete_due = []  #删除删除点附近的点
 	for pm in list:
 		if pm.dogtype == "new":                       #处理计费和修改操作
 			pmlist.append(pm)
 			if pm.id in id_for_fee_list:
 				pm.cost = 2
-			checkMatchFromDogList(pm, dog_list)
+			delete_due.extend(checkMatchFromDogList(pm, dog_list))
 		if pm.dogtype == "server":                    #处理被修改或删除的狗点
 			for old_dog in original_dog_list:
 				if pm.id == old_dog.id:
@@ -261,6 +266,9 @@ def proc_mod(list, id_for_fee_list, original_dog_list, dog_list, operator_name):
 					original_dog_list.remove(old_dog)
 
 	for dog in original_dog_list:
+		pmlist.append(createElement("delete", dog, operator_name))
+
+	for dog in delete_due:
 		pmlist.append(createElement("delete", dog, operator_name))
 	return pmlist
 
