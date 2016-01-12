@@ -142,12 +142,13 @@ def proc_del(list, doglist, offset=20):
 					#dog_list.append(dog)
 					if distance < min_dis:
 						min_dis = distance
-						dog_shadow = [dog.id, dog.longitude, dog.latitude]       #匹配距离最近的狗id
+						dog_shadow = [dog.id, dog.longitude, dog.latitude, dog]       #匹配距离最近的狗id
 		if dog_shadow:
 			p.name = p.name if p.match != "?" else p.name.replace("?", dog_shadow[0])
 			p.match = dog_shadow[0]
 			p.longitude = dog_shadow[1]
 			p.latitude = dog_shadow[2]
+			dog_shadow[3].matched = p.id
 	return del_set
 
 
@@ -228,7 +229,7 @@ def handle(handle_type, handle_list, dog_list):
 
 def add(list):
 	form = list[-1].form
-	if form == "1":
+	if form == "1" or form == "2":
 		pass
 	else:
 		handleForList(list)
@@ -251,13 +252,12 @@ def delete(list, dog_list):
 #dog_id 鍒濆鐨勭嫍id琛紝 dog_list澶勭悊杩囧悗鐨勭嫍琛�
 def proc_mod(list, id_for_fee_list, original_dog_list, dog_list, operator_name):
 	pmlist = []
-	delete_due = []  #删除删除点附近的点
 	for pm in list:
 		if pm.dogtype == "new":                       #处理计费和修改操作
 			pmlist.append(pm)
 			if pm.id in id_for_fee_list:
 				pm.cost = 2
-			delete_due.extend(checkMatchFromDogList(pm, dog_list))
+			checkMatchFromDogList(pm, dog_list)
 		if pm.dogtype == "server":                    #处理被修改或删除的狗点
 			for old_dog in original_dog_list:
 				if pm.id == old_dog.id:
@@ -268,8 +268,6 @@ def proc_mod(list, id_for_fee_list, original_dog_list, dog_list, operator_name):
 	for dog in original_dog_list:
 		pmlist.append(createElement("delete", dog, operator_name))
 
-	for dog in delete_due:
-		pmlist.append(createElement("delete", dog, operator_name))
 	return pmlist
 
 
@@ -302,9 +300,11 @@ def createElement(operate, dog, operator_name):
 	pm.form = dog.form
 	pm.match = dog.id
 	pm.speedlimit = dog.speedlimit
+	print "sp",dog.speedlimit
 	pm.longitude = dog.longitude
 	pm.latitude = dog.latitude
 	pm.heading = dog.heading
 	pm.form = dog.form
 	pm.account = operator_name
+	pm.id = dog.matched if dog.matched else ""
 	return pm

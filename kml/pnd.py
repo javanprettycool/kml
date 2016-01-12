@@ -13,9 +13,9 @@ import sys
 
 EXT = ".kml"
 
-date = "2015_12_25"  #改这个
+date = "2015_12_27"  #改这个
 
-dir = u"E:/dataD/2015/12月/1225/"  #改这个
+dir = u"E:/dataD/2015/12月/1227/"  #改这个
 
 filename = u"PNDCJ_" + date + u"_22pm"
 #filename = u"pnd_zbr_left"

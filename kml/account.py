@@ -121,9 +121,10 @@ def get_normal_style():
 
 
 
-path = 'e:/dataD/test/test (2).xls'
+path = 'd:/test/account.xls'
 account_file_path = "e:/dataD/account.xls"
-save_dir = "e:/dataD/test/"
+save_dir = "d:/test/"
+date = "12"
 
 workbook = xlrd.open_workbook(path)
 sheet = workbook.sheet_by_index(0)
@@ -194,7 +195,7 @@ for i in range(1, sheet.nrows):
 		isheet1.write(2, 1, account, get_normal_style())
 		isheet1.write(2, 2, sum, get_normal_style())
 		isheet1.write(2, 3, sum, get_normal_style())
-		isheet1.write_merge(0, 0, 0, 3, u"2015年11月份<"+title+u">采集补贴(共"+str(sum)+u"元)", get_normal_style())
+		isheet1.write_merge(0, 0, 0, 3, u"2015年"+date+u"月份<"+title+u">采集补贴(共"+str(sum)+u"元)", get_normal_style())
 		isheet1.col(0).width = 6000
 		isheet1.col(1).width = 6000
 		isheet1.col(2).width = 8000
@@ -207,7 +208,7 @@ for i in range(1, sheet.nrows):
 		isheet2.col(2).width = 3800
 		isheet2.write_merge(1, start-2, 0, 0, account, get_normal_style())
 
-		wbk.save(save_dir+u"2015年11月份采集费用补贴（"+title+u"）.xls")
+		wbk.save(save_dir+u"2015年"+date+u"月份采集费用补贴（"+title+u"）.xls")
 
 
 

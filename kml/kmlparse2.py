@@ -147,6 +147,9 @@ def get_namespace(element):
 	
 
 def parse_pnd(path, operator_name="test_zzf"):
+    if not os.path.exists(path):
+        print u"没有pnd数据"
+        return (None)
     list = []
     dog_list = []
     handle_list = []
@@ -210,6 +213,9 @@ def parse_pnd(path, operator_name="test_zzf"):
 
 
 def parse_caiji(path, operator_name="test_zzf"):
+        if not os.path.exists(path):
+            print u"没有采集数据"
+            return (None)
         list = []
         handle_list = []
         dog_list = []
@@ -233,6 +239,7 @@ def parse_caiji(path, operator_name="test_zzf"):
                         elif node.text[1] == u"狗":
                             pm.dogtype = "server"
                             pm.id = node.text.split("_")[1][:-1]
+                            pm.speedlimit = node.text.split("_")[4][2:]
                             pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
                             dog_list.append(pm)
                         else:

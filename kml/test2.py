@@ -13,9 +13,9 @@ import sys
 
 EXT = ".kml"
 
-date = "2015_12_15"  #改这个
+date = "2015_12_27"  #改这个
 
-dir = u"E:/dataD/2015/12月/test/1/"  #改这个
+dir = u"E:/dataD/2015/12月/1227/"  #改这个
 
 pnd_filename = u"PNDCJ_" + date + u"_22pm"
 caiji_filename = u"CAIJI_" + date + u"_21pm"
@@ -29,6 +29,7 @@ fodername = u'PND&CAIJI\u91c7\u96c6[' + date[5:] + '_21-00 ~ ' + date[5:] + '_ 2
 pm_list = []
 
 pnd_list, pnd_handle_list, pnd_dog_list = kmlparse2.parse_pnd(pnd_path)
+
 
 caiji_list, caiji_handle_list, caiji_dog_list = kmlparse2.parse_caiji(caiji_path)
 

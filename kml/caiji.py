@@ -13,9 +13,9 @@ import sys
 
 EXT = ".kml"
 
-date = "2015_12_24"
+date = "2015_12_27"
 
-dir = u"E:/dataD/2015/12月/1224/"
+dir = u"E:/dataD/2015/12月/1227/"
 
 #filename = u"PNDCJ_" + date + u"_22pm"
 filename = u"CAIJI_" + date + u"_21pm"

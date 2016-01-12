@@ -222,6 +222,7 @@ def createXlsForDog(list, dir, filename="dog_detail"):
         sheet.write(i, 3, p.heading)
         sheet.write(i, 4, p.speedlimit)
         sheet.write(i, 5, p.form)
+        sheet.write(i, 6, p.matched)
         i += 1
     table.save(dir+"/"+filename+".xls")
 
@@ -237,6 +238,7 @@ def readDogIdFromExcel(file):
         dog.heading = table.row_values(row)[3]
         dog.speedlimit = table.row_values(row)[4]
         dog.form = table.row_values(row)[5]
+        dog.matched = table.row_values(row)[6]
         doglist.append(dog)
     return doglist
 
