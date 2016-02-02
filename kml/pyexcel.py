@@ -5,6 +5,7 @@ import xlrd
 import xlwt
 import time
 import sys
+import os
 from placemark import *
 
 formdict = {"0":u"0闯红灯照相",
@@ -40,7 +41,7 @@ formdict = {"0":u"0闯红灯照相",
     "33":u"33山区路段",
     "34":u"34冰雪路段",
     "28":u"28收费站",
-    "29":u"休息区",
+    "29":u"29休息区",
     "25":u"25高速出口",
     "35":u"35检查站"}
 
@@ -146,12 +147,12 @@ def createXls(datalist, dir, filename="test", date="", operator_name=u"张志锋
         if checkForList(pm):
             table.write(i, 1, gethandletype(pm.handletype))
             table.write(i, 2, pm.id)
-            table.write(i, 3, pm.match)
-            table.write(i, 4, getform(pm.form))
-            table.write(i, 5, "%.6f"%pm.longitude)
-            table.write(i, 6, "%.6f"%pm.latitude)
+            table.write(i, 3, pm.match if pm.handletype != '1' else '')
+            table.write(i, 4, getform(pm.form) if getform(pm.form) else pm.form)
+            table.write(i, 5, "%.6f" % pm.longitude)
+            table.write(i, 6, "%.6f" % pm.latitude)
             table.write(i, 9, pm.heading)
-            table.write(i, 10, pm.speedlimit)
+            table.write(i, 10, pm.speedlimit if int(pm.speedlimit) < 150 else "0")   #去掉那些bug限速
             table.write(i, 12, pm.account)
             table.write(i, 13, date.split("-")[1]+u"月")
             table.write(i, 14, operator_name)
@@ -227,6 +228,9 @@ def createXlsForDog(list, dir, filename="dog_detail"):
     table.save(dir+"/"+filename+".xls")
 
 def readDogIdFromExcel(file):
+    if not os.path.exists(file):
+        print "dog_detail.xls不存在"
+        return []
     doglist = []
     data = xlrd.open_workbook(file)
     table = data.sheets()[0]
@@ -238,7 +242,7 @@ def readDogIdFromExcel(file):
         dog.heading = table.row_values(row)[3]
         dog.speedlimit = table.row_values(row)[4]
         dog.form = table.row_values(row)[5]
-        dog.matched = table.row_values(row)[6]
+        #dog.matched = table.row_values(row)[6]
         doglist.append(dog)
     return doglist
 

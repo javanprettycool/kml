@@ -184,14 +184,18 @@ def parse_pnd(path, operator_name="test_zzf"):
                         pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
                         dog_list.append(pm)
                     else:
-                        pm.dogtype = "new"                                      #操作员手动新增的点
-                        #pm.id = node.text.split("_")[1][:-1]
-                        pm.handletype = "1"
-                        #pm.match = node.text.split("_")[3][1:-1]
-                        pm.form = node.text.split("_")[0]
-                        pm.speedlimit = node.text.split("_")[1]
-                        pm.account = operator_name
-                        handle_list.append(pm)
+                        try:
+                            pm.dogtype = "new"                                      #操作员手动新增的点
+                            #pm.id = node.text.split("_")[1][:-1]
+                            pm.handletype = "1"
+                            #pm.match = node.text.split("_")[3][1:-1]
+                            pm.form = node.text.split("_")[0]
+                            pm.speedlimit = node.text.split("_")[1]
+                            pm.account = operator_name
+                            handle_list.append(pm)
+                        except StandardError, e:
+                            print "检查你新增的点 " + pm.name
+                            sys.exit()
                 if node.tag == '{0}LookAt'.format(namespace):
                     for data in node.getchildren():
                         # if data.tag == '{0}longitude'.format(namespace):
@@ -277,12 +281,12 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                 pm = placemark()
                 for node in elem.getchildren():
                     if node.tag == '{0}name'.format(namespace):
-                        if node.text == u"未命名路径":
+                        if node.text == u"未命名路径":  #去除未命名路径
                             break
                         pm.name = node.text
                         pm.dogtype = "server"
                         pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
-                        pm.handletype = "2"
+                        pm.handletype = "1"
                         pm.form = node.text.split("_")[2].split("-")[1][5:-1]
                         pm.account = "test_zzf"
                         pm.speedlimit = int(node.text.split("_")[-1][6:-1])
@@ -300,18 +304,19 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
             return
 
         handle_list = [x for x in list]
-        for p in handle_list:
-            if p.form != u"测速" :
-                list.remove(p)
-            else:
-                if p.speedlimit >= 60:
-                    list.remove(p)
-                else:
-                    p.speedlimit = 60
-                    p.form = "1"
+        # for p in handle_list:
+        #     if p.form != u"测速" :
+        #         list.remove(p)
+        #     else:
+        #         if p.speedlimit >= 60:
+        #             list.remove(p)
+        #         else:
+        #             p.speedlimit = 60
+        #             p.form = "1"
 
 
-        createXls(list, dir, filename, date, operator_name)
+        # createXls(list, dir, filename, date, operator_name)
+        return list;
 
 def outputKml(handle_tuple, docname, fodername, dir, filename, segment=1):
     whole_pm_list = []

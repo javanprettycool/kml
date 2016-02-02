@@ -50,11 +50,11 @@ def transfromlist(list, direction):
 
 
 def handleForList(list):
-	length = len(list)
-	if length <= 1:
+	direction = len(list)
+	if direction <= 1:
 		return False
 	else:
-		transfromlist(list, length)
+		transfromlist(list, direction)
 	return True
 
 
@@ -194,7 +194,7 @@ def operate(list, dir, dog_list):
 				handle_list.append(p)
 			else:
 				handle_type = handle_list[-1].handletype
-				handle(handle_type, handle_list, dog)
+				handle(handle_type, handle_list, dog)    #处理点
 				id_for_fee_list.append(pre.id)
 				pre = p
 				handle_list =[p]
@@ -229,7 +229,7 @@ def handle(handle_type, handle_list, dog_list):
 
 def add(list):
 	form = list[-1].form
-	if form == "1" or form == "2":
+	if form == "1" or form == "2":  #流动测速和测速不处理
 		pass
 	else:
 		handleForList(list)
@@ -254,10 +254,10 @@ def proc_mod(list, id_for_fee_list, original_dog_list, dog_list, operator_name):
 	pmlist = []
 	for pm in list:
 		if pm.dogtype == "new":                       #处理计费和修改操作
-			pmlist.append(pm)
 			if pm.id in id_for_fee_list:
 				pm.cost = 2
-			checkMatchFromDogList(pm, dog_list)
+			if checkMatchFromDogList(pm, dog_list):
+				pmlist.append(pm)
 		if pm.dogtype == "server":                    #处理被修改或删除的狗点
 			for old_dog in original_dog_list:
 				if pm.id == old_dog.id:
@@ -281,7 +281,6 @@ def checkChange(pm, dog):
 	elif pm.speedlimit != dog.speedlimit:
 		return True
 	elif pm.form != dog.form:
-		print dog.form
 		return True
 	else:
 		return False
@@ -300,7 +299,6 @@ def createElement(operate, dog, operator_name):
 	pm.form = dog.form
 	pm.match = dog.id
 	pm.speedlimit = dog.speedlimit
-	print "sp",dog.speedlimit
 	pm.longitude = dog.longitude
 	pm.latitude = dog.latitude
 	pm.heading = dog.heading

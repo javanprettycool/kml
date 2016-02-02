@@ -13,11 +13,11 @@ import re
 from pyexcel import excelobject
 from check import checkexcel
 
-sheet1_name = "2015年12月份采集费用补贴（日）统计表"
-sheet2_name = "2015年12月份采集费用补贴（月）统计表"
-sheet3_name = "12月份需补贴采集数据"
-dir = "D:/count/"
-outputfile = u"D:/2015年12月采集费用补贴日&月分析表.xls"
+sheet1_name = "2016年1月份采集费用补贴（日）统计表"
+sheet2_name = "2016年1月份采集费用补贴（月）统计表"
+sheet3_name = "1月份需补贴采集数据"
+dir = "D:/1count/"
+outputfile = u"D:/2016年1月采集费用补贴日&月分析表.xls"
 
 
 
@@ -55,7 +55,9 @@ dict = {"0":u"0闯红灯照相",
     "33":u"33山区路段",
     "34":u"34冰雪路段",
     "28":u"28收费站",
-    "25":u"25高速出口"}
+    "29":u"休息区",
+    "25":u"25高速出口",
+    "35":u"35检查站"}
 
 def formatDate(time):
     time = str(time)
@@ -173,7 +175,7 @@ for dir in os.listdir(path):
         for i in range(3, sheet.nrows):
             if sheet.cell_value(i, 4) != "":
                 type = re.findall(r'[0-9]{1,2}', sheet.cell_value(i, 4))
-            if  sheet.ncols >= 19 and sheet.cell_value(i,18) != "" and sheet.cell_value(i, 12) != "ZZF" \
+            if sheet.ncols >= 19 and sheet.cell_value(i,18) != "" and sheet.cell_value(i, 12) != "ZZF" \
                 and sheet.cell_value(i, 12) != "test_zzf"  \
 			    and sheet.cell_value(i, 12) != "test_zbr" \
 			    and (type[0] == u"0" or type[0] == u"1" or type[0] == u"16" or type[0] == u"7" or type[0] == u"2" \

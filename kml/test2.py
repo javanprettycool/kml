@@ -1,4 +1,8 @@
 #coding=utf-8
+
+
+
+#采集和pnd一起处理
 __author__ = 'javan'
 
 import xlrd

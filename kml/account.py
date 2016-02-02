@@ -35,7 +35,6 @@ def parse_account(path=""):
 def get_header_style():
 	header_style = xlwt.XFStyle()
 	font = xlwt.Font()
-	font.name = 'SimSun'
 	font.bold = True
 	font.colour_index = 0
 	header_style.font = font
@@ -85,7 +84,6 @@ def get_footer_style():
 def get_form_style():
 	n_style = xlwt.XFStyle()
 	font = xlwt.Font()
-	font.name = 'SimSun'
 	font.colour_index = 0
 	n_style.font = font
 
@@ -124,7 +122,7 @@ def get_normal_style():
 path = 'd:/test/account.xls'
 account_file_path = "e:/dataD/account.xls"
 save_dir = "d:/test/"
-date = "12"
+date = "1"
 
 workbook = xlrd.open_workbook(path)
 sheet = workbook.sheet_by_index(0)
@@ -161,7 +159,7 @@ for i in range(1, sheet.nrows):
 				catch = 1
 				break
 		if catch != 1:
-			print account+" has no detail"
+			print account+u" 未找到采集账号信息"
 
 		if company == "" and name != "":
 			title = name
@@ -173,7 +171,7 @@ for i in range(1, sheet.nrows):
 			title = company+"-"+name
 		company = ""
 		name = ""
-		print title, account
+		#print title, account
 		wbk = xlwt.Workbook(encoding='utf-8', style_compression=0)
 		isheet1 = wbk.add_sheet(title, cell_overwrite_ok=True)
 		isheet2 = wbk.add_sheet(title+u"(日)", cell_overwrite_ok=True)
