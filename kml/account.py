@@ -119,10 +119,10 @@ def get_normal_style():
 
 
 
-path = 'd:/test/account.xls'
-account_file_path = "e:/dataD/account.xls"
-save_dir = "d:/test/"
-date = "1"
+path = u"E:/test/2016年5月采集费用补贴日&月分析表.xls"
+account_file_path = u"F:/dataD/采集账号.xls"
+save_dir = u"E:/test/"
+date = u"2016年5月"
 
 workbook = xlrd.open_workbook(path)
 sheet = workbook.sheet_by_index(0)
@@ -135,6 +135,7 @@ start = 1
 company = ""
 name = ""
 date_list = []
+isChanging = ""
 
 
 day = 0
@@ -151,13 +152,20 @@ for i in range(1, sheet.nrows):
 		break
 	if sheet.cell_value(i, 0) != "" and sheet.cell_value(i, 0) != u"合计":
 		account = sheet.cell_value(i, 0)
+
 		for row in detail:
 			catch = 0
+			if account.lower().split("_")[0] == "dfy":
+				company = u"东方云"
+				name = account
+				catch = 1
 			if account.lower() == row[1] or account.upper() == row[1]:
 				company = row[0]
 				name = row[2]
+				isChanging = u"(不计费)" if row[6] else u""
 				catch = 1
 				break
+
 		if catch != 1:
 			print account+u" 未找到采集账号信息"
 
@@ -193,7 +201,7 @@ for i in range(1, sheet.nrows):
 		isheet1.write(2, 1, account, get_normal_style())
 		isheet1.write(2, 2, sum, get_normal_style())
 		isheet1.write(2, 3, sum, get_normal_style())
-		isheet1.write_merge(0, 0, 0, 3, u"2015年"+date+u"月份<"+title+u">采集补贴(共"+str(sum)+u"元)", get_normal_style())
+		isheet1.write_merge(0, 0, 0, 3, date+u"份<"+title+u">采集补贴(共"+str(sum)+u"元)", get_normal_style())
 		isheet1.col(0).width = 6000
 		isheet1.col(1).width = 6000
 		isheet1.col(2).width = 8000
@@ -206,7 +214,9 @@ for i in range(1, sheet.nrows):
 		isheet2.col(2).width = 3800
 		isheet2.write_merge(1, start-2, 0, 0, account, get_normal_style())
 
-		wbk.save(save_dir+u"2015年"+date+u"月份采集费用补贴（"+title+u"）.xls")
+
+
+		wbk.save(save_dir + isChanging + date + u"份采集费用补贴（" + title + u"）.xls")
 
 
 

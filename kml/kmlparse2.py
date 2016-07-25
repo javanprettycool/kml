@@ -39,6 +39,21 @@ def createPM(pm):
         ),
       )
 
+def createLS(line):  #linestring
+
+    return KML.Placemark(
+        KML.name('gx:altitudeMode Example'),
+        KML.LineString(
+          KML.extrude('1'),
+          GX.altitudeMode('relativeToSeaFloor'),
+          KML.coordinates(
+          str(line[0][0])+','+str(line[0][1])+',0 '+
+          str(line[1][0])+','+str(line[1][1])+',0 '+
+          str(line[2][0])+','+str(line[2][1])+',0 '+
+          str(line[3][0])+','+str(line[3][1])+',0 '
+          ),
+        ),
+      )
 
 def isDog(type):
     if type == "server":
@@ -148,8 +163,8 @@ def get_namespace(element):
 
 def parse_pnd(path, operator_name="test_zzf"):
     if not os.path.exists(path):
-        print u"没有pnd数据"
-        return (None)
+        print u"目录不存在，请检查文件路径"
+        exit()
     list = []
     dog_list = []
     handle_list = []
@@ -185,12 +200,13 @@ def parse_pnd(path, operator_name="test_zzf"):
                         dog_list.append(pm)
                     else:
                         try:
+                            name = node.text.replace("-", "_")
                             pm.dogtype = "new"                                      #操作员手动新增的点
-                            #pm.id = node.text.split("_")[1][:-1]
+                            #pm.id = name.split("_")[1][:-1]
                             pm.handletype = "1"
-                            #pm.match = node.text.split("_")[3][1:-1]
-                            pm.form = node.text.split("_")[0]
-                            pm.speedlimit = node.text.split("_")[1]
+                            #pm.match = name.split("_")[3][1:-1]
+                            pm.form = name.split("_")[0]
+                            pm.speedlimit = name.split("_")[1]
                             pm.account = operator_name
                             handle_list.append(pm)
                         except StandardError, e:
@@ -238,7 +254,7 @@ def parse_caiji(path, operator_name="test_zzf"):
                             pm.handletype = node.text.split("_")[2][0]
                             pm.form = node.text.split("_")[4].split("(")[1].split(")")[0]
                             pm.speedlimit = node.text.split("_")[6][2:]
-                            pm.account = node.text.split("_")[8][1:-12]
+                            pm.account = node.text.split("@")[1][0:-12]
                             handle_list.append(pm)
                         elif node.text[1] == u"狗":
                             pm.dogtype = "server"
@@ -247,14 +263,19 @@ def parse_caiji(path, operator_name="test_zzf"):
                             pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
                             dog_list.append(pm)
                         else:
-                            pm.dogtype = "new"                                      #操作员手动新增的点
-                            #pm.id = node.text.split("_")[1][:-1]
-                            pm.handletype = "1"
-                            #pm.match = node.text.split("_")[3][1:-1]
-                            pm.form = node.text.split("_")[0]
-                            pm.speedlimit = node.text.split("_")[1]
-                            pm.account = operator_name
-                            handle_list.append(pm)
+                            try:
+                                name = node.text.replace("-", "_")
+                                pm.dogtype = "new"                                      #操作员手动新增的点
+                                #pm.id = name.split("_")[1][:-1]
+                                pm.handletype = "1"
+                                #pm.match = name.split("_")[3][1:-1]
+                                pm.form = name.split("_")[0]
+                                pm.speedlimit = name.split("_")[1]
+                                pm.account = operator_name
+                                handle_list.append(pm)
+                            except StandardError, e:
+                                print "检查你新增的点 " + pm.name
+                                sys.exit()
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
                             if data.tag == '{0}heading'.format(namespace):
@@ -283,22 +304,167 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                     if node.tag == '{0}name'.format(namespace):
                         if node.text == u"未命名路径":  #去除未命名路径
                             break
+                        if node.text == "0" or node.text == "1":
+                            pm.name = node.text
+                            list.append(pm)
+                            continue
                         pm.name = node.text
                         pm.dogtype = "server"
                         pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
-                        pm.handletype = "1"
+                        pm.id = pm.match
+                        pm.handletype = "2"
                         pm.form = node.text.split("_")[2].split("-")[1][5:-1]
                         pm.account = "test_zzf"
-                        pm.speedlimit = int(node.text.split("_")[-1][6:-1])
+                        pm.speedlimit = int(node.text.split("_")[4][6:-1])
                         list.append(pm)
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
-                            if data.tag == '{0}longitude'.format(namespace):
-                                pm.longitude = float(data.text)
-                            if data.tag == '{0}latitude'.format(namespace):
-                                pm.latitude = float(data.text)
                             if data.tag == '{0}heading'.format(namespace):
-                                pm.heading = float(data.text)
+                                pm.heading = round(float(data.text))
+                                if (pm.heading<0):
+                                    pm.heading = 360 + pm.heading
+                    if node.tag == '{0}Point'.format(namespace):                 #需要获取point下的coordinate的坐标，lookat下的坐标是google转换过的
+                        for data in node.getchildren():
+                            if data.tag == '{0}coordinates'.format(namespace):
+                                part = data.text.split(",")
+                                pm.longitude = float("%.6f" % float(part[0]))
+                                pm.latitude = float("%.6f" % float(part[1]))
+        if not list:
+            print "no data today"
+            return
+
+        handle_list = [x for x in list]
+        # for p in handle_list:
+        #     if p.form != u"测速" :
+        #         list.remove(p)
+        #     else:
+        #         if p.speedlimit >= 60:
+        #             list.remove(p)
+        #         else:
+        #             p.speedlimit = 60
+        #             p.form = "1"
+
+
+        # createXls(list, dir, filename, date, operator_name)
+        return list
+
+def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
+        dir = os.path.dirname(path)
+        list = []
+        tree = etree.parse(path)
+        namespace = get_namespace(tree.getroot())
+        for elem in tree.getroot().iter():
+            if elem.tag == '{0}Placemark'.format(namespace):
+                pm = placemark()
+                for node in elem.getchildren():
+                    if node.tag == '{0}name'.format(namespace):
+                        if node.text == u"未命名路径":  #去除未命名路径
+                            break
+                        if node.text == "0" or node.text == "1":
+                            pm.name = node.text
+                            list.append(pm)
+                            continue
+                        pm.name = node.text
+                        pm.dogtype = "server"
+                        #pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
+                        #pm.id = pm.match
+                        pm.handletype = "1"
+                        pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
+                        pm.account = "test_zzf"
+                        pm.speedlimit = int(node.text.split("_")[4][2:])
+                        list.append(pm)
+                    if node.tag == '{0}LookAt'.format(namespace):
+                        for data in node.getchildren():
+                            if data.tag == '{0}heading'.format(namespace):
+                                pm.heading = round(float(data.text))
+                                if (pm.heading<0):
+                                    pm.heading = 360 + pm.heading
+                    if node.tag == '{0}Point'.format(namespace):                 #需要获取point下的coordinate的坐标，lookat下的坐标是google转换过的
+                        for data in node.getchildren():
+                            if data.tag == '{0}coordinates'.format(namespace):
+                                part = data.text.split(",")
+                                pm.longitude = float("%.6f" % float(part[0]))
+                                pm.latitude = float("%.6f" % float(part[1]))
+        if not list:
+            print "no data today"
+            return
+
+        handle_list = [x for x in list]
+        # for p in handle_list:
+        #     if p.form != u"测速" :
+        #         list.remove(p)
+        #     else:
+        #         if p.speedlimit >= 60:
+        #             list.remove(p)
+        #         else:
+        #             p.speedlimit = 60
+        #             p.form = "1"
+
+
+        # createXls(list, dir, filename, date, operator_name)
+        return list
+def parse_normal(path):
+    dir = os.path.dirname(path)
+    list = []
+    tree = etree.parse(path)
+    namespace = get_namespace(tree.getroot())
+    for elem in tree.getroot().iter():
+        if elem.tag == '{0}Placemark'.format(namespace):
+            pm = placemark()
+            for node in elem.getchildren():
+                if node.tag == '{0}name'.format(namespace):
+                    pm.name = node.text
+                if node.tag == '{0}LookAt'.format(namespace):
+                    for data in node.getchildren():
+                        if data.tag == '{0}heading'.format(namespace):
+                            pm.heading = round(float(data.text))
+                            if pm.heading < 0:
+                                pm.heading += 360
+                if node.tag == '{0}Point'.format(namespace):                 #需要获取point下的coordinate的坐标，lookat下的坐标是google转换过的
+                    for data in node.getchildren():
+                        if data.tag == '{0}coordinates'.format(namespace):
+                            part = data.text.split(",")
+                            pm.longitude = float("%.6f" % float(part[0]))
+                            pm.latitude = float("%.6f" % float(part[1]))
+            list.append(pm)
+    return list
+
+def parse_ts_from_device(path, filename="tt", date="", operator_name=u"张志锋"):
+        dir = os.path.dirname(path)
+        list = []
+        tree = etree.parse(path)
+        namespace = get_namespace(tree.getroot())
+        for elem in tree.getroot().iter():
+            if elem.tag == '{0}Placemark'.format(namespace):
+                pm = placemark()
+                for node in elem.getchildren():
+                    if node.tag == '{0}name'.format(namespace):
+                        if node.text == u"未命名路径":  #去除未命名路径
+                            break
+                        if node.text == "0" or node.text == "1":
+                            pm.name = node.text
+                            list.append(pm)
+                            continue
+                        pm.name = node.text
+                        pm.dogtype = "server"
+                        pm.match = node.text.split("_")[1][0:-1]
+                        pm.handletype = "2"
+                        pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
+                        pm.account = "test_zzf"
+                        pm.speedlimit = int(node.text.split("_")[4][2:])
+                        list.append(pm)
+                    if node.tag == '{0}LookAt'.format(namespace):
+                        for data in node.getchildren():
+                            if data.tag == '{0}heading'.format(namespace):
+                                pm.heading = round(float(data.text))
+                                if (pm.heading<0):
+                                    pm.heading = 360 + pm.heading
+                    if node.tag == '{0}Point'.format(namespace):                 #需要获取point下的coordinate的坐标，lookat下的坐标是google转换过的
+                        for data in node.getchildren():
+                            if data.tag == '{0}coordinates'.format(namespace):
+                                part = data.text.split(",")
+                                pm.longitude = float("%.6f" % float(part[0]))
+                                pm.latitude = float("%.6f" % float(part[1]))
         if not list:
             print "no data today"
             return
@@ -317,6 +483,7 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
 
         # createXls(list, dir, filename, date, operator_name)
         return list;
+
 
 def outputKml(handle_tuple, docname, fodername, dir, filename, segment=1):
     whole_pm_list = []

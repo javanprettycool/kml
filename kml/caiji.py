@@ -13,9 +13,9 @@ import sys
 
 EXT = ".kml"
 
-date = "2016_01_31"
+date = "2016_07_17"
 
-dir = u"E:/dataD/2016/1月/0131/"
+dir = u"F:/dataD/2016/7月/0717/"
 
 #filename = u"PNDCJ_" + date + u"_22pm"
 filename = u"CAIJI_" + date + u"_21pm"
@@ -36,8 +36,6 @@ operate(list, dir+"caiji/", dog_list)
 # 	if p.handletype == "3":
 # 		print p.name, p.matchlist
 
-for p in list:
-	print p.match
 #输入预处理的kml
 outputKml((list, handle_list, dog_list), docname, fodername, dir+"caiji/", "new_"+filename+"_"+date[5:], 1)
 

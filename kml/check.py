@@ -31,4 +31,4 @@ def checkexcel(path):
         return True
 
 
-checkexcel(u"E:/dataD/2015/12月/1216/pnd_zzf_2015_12_16(2).xls")
+#checkexcel(u"E:/dataD/2015/12月/1216/pnd_zzf_2015_12_16(2).xls")

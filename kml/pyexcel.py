@@ -184,10 +184,41 @@ def createXlsForDel(dataSet, filename="test"):
             table.write(i, 2, pm.id)
             table.write(i, 3, m)
             table.write(i, 4, getform(pm.form))
-            table.write(i, 13, u"12月")
+            table.write(i, 13, u"3月")
             table.write(i, 14, u"张志锋")
             table.write(i, 15, otherStyleTime)
             i += 1
+    file.save('e:/file.xls'.replace("file", filename))
+
+
+def createXlsForUpdate(dataSet, filename="test"):
+    if not dataSet:
+        print "no update data"
+        return
+    font = xlwt.Font()
+    font.name = 'SimSun'
+    style = xlwt.XFStyle()
+    style.font = font
+    file = xlwt.Workbook()
+    table = file.add_sheet(u'采集数据', cell_overwrite_ok=True)
+    timeArray = time.localtime(time.time())
+    otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
+    setTableStyle(table)
+
+    i = 3
+    for pm in dataSet:
+        table.write(i, 1, u"2修改")
+        table.write(i, 3, pm.match)
+        table.write(i, 5, "%.6f" % pm.longitude)
+        table.write(i, 6, "%.6f" % pm.latitude)
+        table.write(i, 4, pm.form)
+        table.write(i, 9, pm.heading)
+        table.write(i, 10, pm.speedlimit if int(pm.speedlimit) < 150 else "0")   #去掉那些bug限速
+        table.write(i, 12, u"test_zzf")
+        table.write(i, 13, u"06月")
+        table.write(i, 14, u"张志锋")
+        table.write(i, 15, otherStyleTime)
+        i += 1
     file.save('e:/file.xls'.replace("file", filename))
 
 
@@ -208,7 +239,7 @@ def createXlsForFee(list, dir, filename="id_for_fee"):
 
 def createXlsForDog(list, dir, filename="dog_detail"):
     if not list:
-        print "no data"
+        print "no dog data"
         return
 
     table = xlwt.Workbook()
@@ -268,11 +299,12 @@ def gethandletype(num):
 
 def checkForList(pm):
     if isinstance(pm, placemark):
-        if pm.handletype == 2 or pm.handletype == 3:
-            if pm.match != "?" or pm.match != "":
-                return True
+        if pm.handletype == "2" or pm.handletype == "3":
+            if pm.match == "?" or pm.match == "":
+                print u"没有匹配的点(匹配为?)：" + pm.name
+                return False
             else:
-                print u"没有匹配的点：" + pm.name
+                return True
         else:
             return True
     else:
