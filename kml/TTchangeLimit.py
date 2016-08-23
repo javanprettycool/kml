@@ -9,7 +9,8 @@ import kmlparse2
 from lonlat_util import *
 from process import *
 
-path = "E:/newmake_tt_2301.kml"
+path = u"F:/dataD/投诉/20160725路线/矩形txt-07月-25日-2016-磐官线_tt_25.kml"
+path = path.replace("\\","/")
 
 
 list_tt = kmlparse2.parse_ts(path)
@@ -24,17 +25,33 @@ for p in list_tt:
     #     if p.form == u"红灯" and p.speedlimit == 40 :
     #         p.speedlimit = 70
     #         list.append(p)
-    if p.speedlimit ==40 :
-        p.speedlimit = 60
+    if p.form == u"测速" and p.speedlimit > 40  :
+        p.speedlimit = 40
+        if p.form == u"违规稽查" or p.form == u"事故多发" or p.form == u"禁止掉头":
+            continue
+        elif p.form == u"红灯":
+            p.form = u"0闯红灯拍照"
+        elif p.form == u"测速":
+            p.form = u"1测速照相"
+        elif p.form == u"辅道测速照相":
+            p.form = u"11右侧辅道测速照相"
+        elif p.form == u"高速出口":
+            p.form = u"25高速出口"
+        elif p.form == u"收费站":
+            p.form = u"28收费站"
+        elif p.form == u"急转弯":
+            p.form = u"32急转弯路段"
+        elif p.form == u"休息区":
+            p.form = u"29休息区"
         list.append(p)
 print len(list)
 
 
-filename = "gg"
+filename = "tousu4"
 
 dir = "e:/"
 
-date = "2016-06-23"
+date = "2016-07-25"
 
 createXlsForUpdate(list, filename)
 

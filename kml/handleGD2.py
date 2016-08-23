@@ -10,22 +10,30 @@ from process import *
 
 EXT = ".kml"
 
-date = "2016-07-21"
+date = "2016-08-17"
+#处理高德的
+dir = u"F:\dataD\高速\G25长深高速"  #改这个
 
-dir = u"F:/dataD/高速/G1111伊绥高速采集处理20160720/G1111伊绥高速采集处理20160720/"  #改这个
+dir = dir.replace("\\","/")
+
+if dir[-1] != "/":
+    dir+="/"
 
 pmlist = []
+gd_list = []
 
-gd_filename = u"local2_gd2"
-gd_path = dir + gd_filename + EXT
-gd_list = kmlparse2.parse_gd(gd_path)
-
-for p in gd_list:
-    pmlist.append(createElement("add", p, "gaode"))
+for i in os.listdir(dir):
+    if os.path.isfile(os.path.join(dir,i)):
+        if i.find('XUEHUACJ_2016-08-17') >= 0:
+            gd_filename = i
+            gd_path = dir + gd_filename
+            gd_list = kmlparse2.parse_gd(gd_path)
+            for p in gd_list:
+                 pmlist.append(createElement("add", p, "by_gd_zzf"))
 
 
 #exit()
-createXls(pmlist, dir, "handleGD_"+date+"(4)", date, u"高德")
+createXls(pmlist, dir, "handleGD_"+date, date, u"高德")
 
 
 

@@ -358,21 +358,33 @@ def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
                 pm = placemark()
                 for node in elem.getchildren():
                     if node.tag == '{0}name'.format(namespace):
+                        node.text = node.text.replace("-", "_")
                         if node.text == u"未命名路径":  #去除未命名路径
                             break
-                        if node.text == "0" or node.text == "1":
+                        elif node.text.split('_')[0]=='0' or node.text.split('_')[0]=='1':
+                            try:
+                                name = node.text.replace("-", "_")
+                                pm.dogtype = "new"                                      #操作员手动新增的点
+                                #pm.id = name.split("_")[1][:-1]
+                                pm.handletype = "1"
+                                #pm.match = name.split("_")[3][1:-1]
+                                pm.form = name.split("_")[0]
+                                pm.speedlimit = name.split("_")[1]
+                                pm.account = operator_name
+                                list.append(pm)
+                            except StandardError:
+                                print "检查你新增的点 " + pm.name
+                                sys.exit()
+                        else :
                             pm.name = node.text
+                            pm.dogtype = "server"
+                            #pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
+                            #pm.id = pm.match
+                            pm.handletype = "1"
+                            pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
+                            pm.account = "test_zzf"
+                            pm.speedlimit = int(node.text.split("_")[4][2:])
                             list.append(pm)
-                            continue
-                        pm.name = node.text
-                        pm.dogtype = "server"
-                        #pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
-                        #pm.id = pm.match
-                        pm.handletype = "1"
-                        pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
-                        pm.account = "test_zzf"
-                        pm.speedlimit = int(node.text.split("_")[4][2:])
-                        list.append(pm)
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
                             if data.tag == '{0}heading'.format(namespace):

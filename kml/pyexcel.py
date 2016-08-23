@@ -215,7 +215,7 @@ def createXlsForUpdate(dataSet, filename="test"):
         table.write(i, 9, pm.heading)
         table.write(i, 10, pm.speedlimit if int(pm.speedlimit) < 150 else "0")   #去掉那些bug限速
         table.write(i, 12, u"test_zzf")
-        table.write(i, 13, u"06月")
+        table.write(i, 13, u"07月")
         table.write(i, 14, u"张志锋")
         table.write(i, 15, otherStyleTime)
         i += 1
@@ -278,6 +278,9 @@ def readDogIdFromExcel(file):
     return doglist
 
 def readFeeFromExcel(file):
+    if not os.path.exists(file):
+        print u"没有采集数据"
+        exit()
     data = xlrd.open_workbook(file)
     table = data.sheets()[0]
     return table.col_values(0)

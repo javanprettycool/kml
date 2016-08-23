@@ -13,15 +13,15 @@ import re
 from pyexcel import excelobject
 from check import checkexcel
 
-sheet1_name = "2016年6月份采集费用补贴（日）统计表"
-sheet2_name = "2016年6月份采集费用补贴（月）统计表"
-sheet3_name = "6月份需补贴采集数据"
+sheet1_name = "2016年7月份采集费用补贴（日）统计表"
+sheet2_name = "2016年7月份采集费用补贴（月）统计表"
+sheet3_name = "7月份需补贴采集数据"
 dir = "E:/count/"                       #当月所有文件
-outputfile = u"E:/test/2016年6月采集费用补贴日&月分析表.xls"
+outputfile = u"E:/test/2016年7月采集费用补贴日&月分析表.xls"
 
 account_file_path = u"F:/dataD/采集账号.xls"        #采集账号表
 save_dir = u"E:/test/"                              #最后保存统计excel地址
-date = u"2016年6月"                                #时间
+date = u"2016年7月"                                #时间
 
 
 

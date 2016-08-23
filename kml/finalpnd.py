@@ -9,10 +9,10 @@ import kmlparse2
 from lonlat_util import *
 from process import *
 
-dir = u"F:/dataD/2016/7月/0727"
+dir = u"F:/dataD/2016/8月/0804/pnd/"
+#dir = u"F:/dataD/2016/4月/0401/caiji/"
 
-
-filename = "2.kml"
+filename = "3.kml"
 
 path = dir + filename
 
@@ -31,7 +31,7 @@ print len(handle_list), len(pmlist)
 
 
 
-createXls(pmlist, dir, "pnd_2016_07_27(2)", "2016-07-27", u"张志锋")
+createXls(pmlist, dir, "pnd_2016_08_04(3)", "2016-08-04", u"张志锋")
 #createXls(pmlist, dir, "caiji_2016_04_01", "2016-04-01", u"张志锋")
 
 

@@ -2,7 +2,7 @@
 
 __author__ = 'javan'
 
-
+#处理导出的
 import kmlparse2
 from pyexcel import *
 from process import *
@@ -10,10 +10,16 @@ from process import *
 
 EXT = ".kml"
 
-date = "2016-07-21"
+date = "2016-08-17"
 
-dir = u"F:/dataD/高速/G1111伊绥高速采集处理20160720/G1111伊绥高速采集处理20160720/"  #改这个
-pnd_filename = u"矩形txt-07月-20日-2016-(G1111伊绥高速)126KM绥化市北林区宝山镇林场村--伊春市铁力市朗乡林业局建设经营所1_tt_0720"
+dir = u"F:\dataD\高速\G25长深高速"  #改这个
+
+dir = dir.replace("\\","/")
+
+if dir[-1] != "/":
+    dir+="/"
+
+pnd_filename = u"矩形txt-08月-17日-2016-(G25长深高速)109KM四平市双辽市卧虎镇大富村--沈阳市康平县两家子乡聂家窝堡村2_tt_0817"
 done_filename = u"local2"
 
 pmlist = []
@@ -53,11 +59,15 @@ for p in copy_kml:
         p.form = u"27加油站"
     elif p.form == u"电子监控":
         p.form = u"16电子监控"
-    pmlist.append(createElement("delete", p, "test_zzf"))
+    elif p.form == u"高清摄像":
+        p.form = u"7高清摄像"
+    elif p.form == u"流动测速":
+        p.form = u"2流动测速"
+    pmlist.append(createElement("delete", p, "by_gd_zzf"))
 
 
 #exit()
-createXls(pmlist, dir, "local2_"+date, date, u"张志锋")
+createXls(pmlist, dir, done_filename+"_"+date, date, u"张志锋")
 
 
 
