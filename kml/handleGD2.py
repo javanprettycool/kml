@@ -10,9 +10,9 @@ from process import *
 
 EXT = ".kml"
 
-date = "2016-08-17"
+date = "2016-08-26"
 #处理高德的
-dir = u"F:\dataD\高速\G25长深高速"  #改这个
+dir = u"F:\dataD\投诉\投诉0824"  #改这个
 
 dir = dir.replace("\\","/")
 
@@ -24,7 +24,7 @@ gd_list = []
 
 for i in os.listdir(dir):
     if os.path.isfile(os.path.join(dir,i)):
-        if i.find('XUEHUACJ_2016-08-17') >= 0:
+        if i.find('XUEHUACJ_2016-08-26') >= 0:
             gd_filename = i
             gd_path = dir + gd_filename
             gd_list = kmlparse2.parse_gd(gd_path)

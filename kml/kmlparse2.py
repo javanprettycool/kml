@@ -11,6 +11,7 @@ import xlwt
 import sys
 import codecs
 import os
+import hashlib
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -191,6 +192,7 @@ def parse_pnd(path, operator_name="test_zzf"):
                         pm.form = node.text.split("_")[4].split("(")[1].split(")")[0]
                         pm.speedlimit = node.text.split("_")[6].split("(")[0][2:-2]
                         pm.account = node.text.split("(")[-1].split(")")[0]
+
                         handle_list.append(pm)
                     elif node.text[0] == "!":
                         pm.dogtype = "server"
@@ -228,6 +230,11 @@ def parse_pnd(path, operator_name="test_zzf"):
                             part = data.text.split(",")
                             pm.longitude = float("%.6f" % float(part[0]))
                             pm.latitude = float("%.6f" % float(part[1]))
+
+            hash_code = "form:"+str(pm.form)+";long:"+str(pm.longitude)+";lat:"+str(pm.latitude)+";angle:"+str(pm.heading)+";limit:"+str(pm.speedlimit)+";"
+            m = hashlib.md5()
+            m.update(hash_code)
+            pm.md5 = m.hexdigest()
             list.append(pm)
     return list, handle_list, dog_list
 
@@ -288,6 +295,11 @@ def parse_caiji(path, operator_name="test_zzf"):
                                 part = data.text.split(",")
                                 pm.longitude = float("%.6f" % float(part[0]))
                                 pm.latitude = float("%.6f" % float(part[1]))
+
+                hash_code = "form:"+str(pm.form)+";long:"+str(pm.longitude)+";lat:"+str(pm.latitude)+";angle:"+str(pm.heading)+";limit:"+str(pm.speedlimit)+";"
+                m = hashlib.md5()
+                m.update(hash_code)
+                pm.md5 = m.hexdigest()
                 list.append(pm)
         return list, handle_list, dog_list
 

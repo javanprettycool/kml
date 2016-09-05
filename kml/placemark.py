@@ -1,7 +1,7 @@
 __author__ = 'Javan'
 
 class placemark(object):
-    def __init__(self, name="", dogtype="", id="", form="", handletype="", match ="", longitude=0, latitude=0, heading=0, speedlimit=0, account="", time="", cost="", matched=""):
+    def __init__(self, name="", dogtype="", id="", form="", handletype="", match ="", longitude=0, latitude=0, heading=0, speedlimit=0, account="", time="", cost="", matched="", md5=""):
         self.name = name
         self.dogtype = dogtype
         self.id = id
@@ -17,3 +17,4 @@ class placemark(object):
         self.time = time
         self.cost = cost
         self.matched = matched
+        self.md5 = md5

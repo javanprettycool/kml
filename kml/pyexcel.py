@@ -133,7 +133,7 @@ def setTableStyle(table):
 
 def createXls(datalist, dir, filename="test", date="", operator_name=u"张志锋"):
     if not datalist:
-        print "no data today"
+        print u"生成excel中没有数据"
         return
     file = xlwt.Workbook()
     timeArray = time.localtime(time.time())

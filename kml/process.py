@@ -10,6 +10,8 @@ import os
 
 MAX_INT = sys.maxint
 
+id_for_fee_list = []
+remove_list = []
 
 
 def attr_gbk(elem, name):
@@ -180,26 +182,36 @@ def proc_update(list, doglist, offset=20):
 	return update_set
 
 
+def proc_add(list, doglist, offset=20):
+
+	tmp_list = [x for x in list]
+	for p in tmp_list:
+		for dog in doglist:
+			if checkDistance(p, dog, 50) and p.form == dog.form and p.speedlimit == dog.speedlimit:
+				#distance = getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude)
+				if (0 <= p.heading < offset and (0 <= dog.heading < p.heading+offset or (p.heading-offset)%360 < dog.heading <= 360)) \
+					or (360-offset < p.heading <= 360 and (0 <= dog.heading < (p.heading+offset) % 360 or p.heading-offset < dog.heading <= 360)) \
+					or (p.heading-offset < dog.heading < p.heading+offset):
+					print p.name
+					remove_list.append(p)
+					if p.id in id_for_fee_list:
+						id_for_fee_list.remove(p.id)
 
 
 def operate(list, dir, dog_list):
 	pre = None
-	id_for_fee_list = []
 	handle_list = []
 	dog = [x for x in dog_list]     #鎷疯礉
 	for p in list:
-		if p.dogtype == "new":
-			if checkLalon(p, pre):
-				pre = p
-				handle_list.append(p)
-			else:
-				handle_type = handle_list[-1].handletype
-				handle(handle_type, handle_list, dog)    #处理点
-				id_for_fee_list.append(pre.id)
-				pre = p
-				handle_list =[p]
+		if checkLalon(p, pre):
+			pre = p
+			handle_list.append(p)
 		else:
-			pass
+			handle_type = handle_list[-1].handletype
+			handle(handle_type, handle_list, dog)    #处理点
+			id_for_fee_list.append(pre.id)
+			pre = p
+			handle_list = [p]
 
 	if len(handle_list) != 0:    #鏀跺熬
 		if len(handle_list) >= 1:
@@ -211,6 +223,10 @@ def operate(list, dir, dog_list):
 	if not os.path.exists(dir):
 		os.makedirs(dir)
 
+	for p in remove_list:
+		if p in list:
+			list.remove(p)
+
 	#璐圭敤id琛�
 	createXlsForFee(id_for_fee_list, dir)
 
@@ -220,19 +236,23 @@ def operate(list, dir, dog_list):
 
 def handle(handle_type, handle_list, dog_list):
 	if handle_type == "1":
-		add(handle_list)
+		add(handle_list ,dog_list)
 	elif handle_type == "2":
 		update(handle_list, dog_list)
 	elif handle_type == "3":
 		delete(handle_list, dog_list)
 
 
-def add(list):
+def add(list, dog_list):
 	form = list[-1].form
 	if form == "1" or form == "2":  #流动测速和测速不处理
 		pass
+	elif form == "0":       #单检查匹配重复红灯
+		handleForList(list)
+		proc_add(list, dog_list)
 	else:
 		handleForList(list)
+
 
 
 
@@ -306,3 +326,14 @@ def createElement(operate, dog, operator_name):
 	pm.account = operator_name
 	pm.id = dog.matched if dog.matched else ""
 	return pm
+
+def check_duplicate(list):
+	tmp_list = list[:]
+	hash_set = set()
+
+	for pm in tmp_list:
+		if pm.md5 not in hash_set:
+			hash_set.add(pm.md5)
+		else:
+			print pm.name
+			list.remove(pm)

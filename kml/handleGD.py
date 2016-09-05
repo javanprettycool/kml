@@ -10,17 +10,17 @@ from process import *
 
 EXT = ".kml"
 
-date = "2016-08-17"
+date = "2016-08-26"
 
-dir = u"F:\dataD\高速\G25长深高速"  #改这个
+dir = u"F:\dataD\投诉\投诉0824"  #改这个
 
 dir = dir.replace("\\","/")
 
 if dir[-1] != "/":
     dir+="/"
 
-pnd_filename = u"矩形txt-08月-17日-2016-(G25长深高速)109KM四平市双辽市卧虎镇大富村--沈阳市康平县两家子乡聂家窝堡村2_tt_0817"
-done_filename = u"local2"
+pnd_filename = u"矩形txt-08月-26日-2016-菏泽市s2541_tt_0826"
+done_filename = u"local5"
 
 pmlist = []
 
