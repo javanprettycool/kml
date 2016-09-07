@@ -13,15 +13,15 @@ import re
 from pyexcel import excelobject
 from check import checkexcel
 
-sheet1_name = "2016年7月份采集费用补贴（日）统计表"
-sheet2_name = "2016年7月份采集费用补贴（月）统计表"
-sheet3_name = "7月份需补贴采集数据"
+sheet1_name = "2016年8月份采集费用补贴（日）统计表"
+sheet2_name = "2016年8月份采集费用补贴（月）统计表"
+sheet3_name = "8月份需补贴采集数据"
 dir = "E:/count/"                       #当月所有文件
-outputfile = u"E:/test/2016年7月采集费用补贴日&月分析表.xls"
+outputfile = u"E:/test/2016年8月采集费用补贴日&月分析表.xls"
 
 account_file_path = u"F:/dataD/采集账号.xls"        #采集账号表
 save_dir = u"E:/test/"                              #最后保存统计excel地址
-date = u"2016年7月"                                #时间
+date = u"2016年8月"                                #时间
 
 
 
@@ -502,14 +502,14 @@ for i in range(1, sheet.nrows):
 	if sheet.cell_value(i, 0) == u"总计（费用）":
 		break
 	if sheet.cell_value(i, 0) != "" and sheet.cell_value(i, 0) != u"合计":
-		account = sheet.cell_value(i, 0)
-
+		account = sheet.cell_value(i, 0).strip()
 		for row in detail:
 			catch = 0
 			if account.lower().split("_")[0] == "dfy":
 				company = u"东方云"
 				name = account
 				catch = 1
+				break
 			if account.lower() == row[1] or account.upper() == row[1]:
 				company = row[0]
 				name = row[2]
@@ -565,6 +565,5 @@ for i in range(1, sheet.nrows):
 		isheet2.col(2).width = 3800
 		isheet2.write_merge(1, start-2, 0, 0, account, get_normal_style())
 
-
-
 		wbk.save(save_dir + isChanging + date + u"份采集费用补贴（" + title + u"）.xls")
+		isChanging = ""

@@ -307,6 +307,7 @@ def parse_caiji(path, operator_name="test_zzf"):
 def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
         dir = os.path.dirname(path)
         list = []
+        rectangle_list = []
         tree = etree.parse(path)
         namespace = get_namespace(tree.getroot())
         for elem in tree.getroot().iter():
@@ -315,20 +316,22 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                 for node in elem.getchildren():
                     if node.tag == '{0}name'.format(namespace):
                         if node.text == u"未命名路径":  #去除未命名路径
-                            break
+                            continue
                         if node.text == "0" or node.text == "1":
                             pm.name = node.text
                             list.append(pm)
                             continue
-                        pm.name = node.text
-                        pm.dogtype = "server"
-                        pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
-                        pm.id = pm.match
-                        pm.handletype = "2"
-                        pm.form = node.text.split("_")[2].split("-")[1][5:-1]
-                        pm.account = "test_zzf"
-                        pm.speedlimit = int(node.text.split("_")[4][6:-1])
-                        list.append(pm)
+                        else:
+                            pm.name = node.text
+                            pm.dogtype = "server"
+                            pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
+                            pm.id = pm.match
+                            pm.handletype = "2"
+                            pm.form = node.text.split("_")[2].split("-")[1][5:-1]
+                            pm.account = "test_zzf"
+                            pm.speedlimit = int(node.text.split("_")[4][6:-1])
+                            pm.creat_time = str(node.text.split("~")[1])
+                            list.append(pm)
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
                             if data.tag == '{0}heading'.format(namespace):
@@ -341,6 +344,20 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                                 part = data.text.split(",")
                                 pm.longitude = float("%.6f" % float(part[0]))
                                 pm.latitude = float("%.6f" % float(part[1]))
+
+                    if node.tag == '{0}LineString'.format(namespace):
+                        for data in node.getchildren():
+                            if data.tag == '{0}coordinates'.format(namespace):
+                                part = data.text.strip(",0 \n").split(",0 ")
+                                tmp = []
+                                for i, p in enumerate(part):
+                                    if i % 2 == 0:
+                                        lon = float("%.6f" % float(p.split(',')[0]))
+                                        la = float("%.6f" % float(p.split(',')[1]))
+                                        tmp.append([lon, la])
+                                    if i > 2:
+                                        break
+                                rectangle_list.append(tmp)
         if not list:
             print "no data today"
             return
@@ -358,7 +375,7 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
 
 
         # createXls(list, dir, filename, date, operator_name)
-        return list
+        return list, rectangle_list
 
 def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
         dir = os.path.dirname(path)
@@ -389,7 +406,7 @@ def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
                                 sys.exit()
                         else :
                             pm.name = node.text
-                            pm.dogtype = "server"
+                            pm.dogtype = "gd"
                             #pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
                             #pm.id = pm.match
                             pm.handletype = "1"

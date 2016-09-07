@@ -11,7 +11,7 @@ import zipfile
 
 EXT = ".kml"
 
-date = "2016_08_28"  #改这个
+date = "2016_08_13"  #改这个
 
 year = date.split('_')[0]
 month = date.split('_')[1]
@@ -65,7 +65,7 @@ pm_list = []
 #pnd
 pnd_list, pnd_handle_list, pnd_dog_list = kmlparse2.parse_pnd(pnd_path)
 if len(pnd_handle_list) != 0:
-    operate(pnd_list, dir+"pnd/", pnd_dog_list)
+    operate(pnd_handle_list, dir+"pnd/", pnd_dog_list)
     outputKml((pnd_list, pnd_handle_list, pnd_dog_list), pnd_docname, pnd_fodername, dir+"pnd/", "new_"+pnd_filename+"_"+date[5:], 400)
     print str(len(pnd_handle_list))+u"条pnd数据"
 else:
@@ -76,7 +76,7 @@ else:
 caiji_list, caiji_handle_list, caiji_dog_list = kmlparse2.parse_caiji(caiji_path)
 check_duplicate(caiji_handle_list) #caiji的去重复,pnd暂时不无需要
 if len(caiji_handle_list) != 0:
-    operate(caiji_list, dir+"caiji/", caiji_dog_list)
+    operate(caiji_handle_list, dir+"caiji/", caiji_dog_list)
     outputKml((caiji_list, caiji_handle_list, caiji_dog_list), caiji_docname, caiji_fodername, dir+"caiji/", "new_"+caiji_filename+"_"+date[5:], 1)
     print str(len(caiji_handle_list))+u"条caiji数据"
 else:

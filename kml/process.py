@@ -192,10 +192,9 @@ def proc_add(list, doglist, offset=20):
 				if (0 <= p.heading < offset and (0 <= dog.heading < p.heading+offset or (p.heading-offset)%360 < dog.heading <= 360)) \
 					or (360-offset < p.heading <= 360 and (0 <= dog.heading < (p.heading+offset) % 360 or p.heading-offset < dog.heading <= 360)) \
 					or (p.heading-offset < dog.heading < p.heading+offset):
-					print p.name
 					remove_list.append(p)
 					if p.id in id_for_fee_list:
-						id_for_fee_list.remove(p.id)
+						id_for_fee_list.remove(p.id)        #删除重复计费的点
 
 
 def operate(list, dir, dog_list):
@@ -208,21 +207,22 @@ def operate(list, dir, dog_list):
 			handle_list.append(p)
 		else:
 			handle_type = handle_list[-1].handletype
+			id_for_fee_list.append(pre.id)           #这个必须在handle前面
 			handle(handle_type, handle_list, dog)    #处理点
-			id_for_fee_list.append(pre.id)
 			pre = p
 			handle_list = [p]
 
 	if len(handle_list) != 0:    #鏀跺熬
 		if len(handle_list) >= 1:
+			id_for_fee_list.append(handle_list[-1].id)    #这个必须在handle前面
 			handle(handle_list[-1].handletype, handle_list, dog)
-			id_for_fee_list.append(handle_list[-1].id)
 		else:
 			pass
 
 	if not os.path.exists(dir):
 		os.makedirs(dir)
 
+	#删除新增红灯与狗点重复的点
 	for p in remove_list:
 		if p in list:
 			list.remove(p)
@@ -246,8 +246,8 @@ def handle(handle_type, handle_list, dog_list):
 def add(list, dog_list):
 	form = list[-1].form
 	if form == "1" or form == "2":  #流动测速和测速不处理
-		pass
-	elif form == "0":       #单检查匹配重复红灯
+		proc_add(list, dog_list)
+	elif form == "0":       #单检查匹配重复红灯和测速
 		handleForList(list)
 		proc_add(list, dog_list)
 	else:
@@ -335,5 +335,4 @@ def check_duplicate(list):
 		if pm.md5 not in hash_set:
 			hash_set.add(pm.md5)
 		else:
-			print pm.name
 			list.remove(pm)
