@@ -22,7 +22,7 @@ class placemark(object):
         self.md5 = md5
 
 
-    def TransforForm(self):
+    def transforForm(self):
         if self.form == u"违规稽查" or self.form == u"事故多发" or self.form == u"禁止掉头":
             pass
         elif self.form == u"红灯":
@@ -47,7 +47,12 @@ class placemark(object):
             self.form = u"7高清摄像"
         elif self.form == u"流动测速":
             self.form = u"2流动测速"
-
+        elif self.form == u"事故多发":
+            self.form = u"23事故多发"
+        elif self.form == u"进入区间测速":
+            self.form = u"3进入区间测速"
+        elif self.form == u"离开区间测速":
+            self.form = u"4离开区间测速"
 
 class rectangle(object):
     pass

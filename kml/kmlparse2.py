@@ -12,6 +12,8 @@ import sys
 import codecs
 import os
 import hashlib
+import time
+import pyexcel
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -51,7 +53,8 @@ def createLS(line):  #linestring
           str(line[0][0])+','+str(line[0][1])+',0 '+
           str(line[1][0])+','+str(line[1][1])+',0 '+
           str(line[2][0])+','+str(line[2][1])+',0 '+
-          str(line[3][0])+','+str(line[3][1])+',0 '
+          str(line[3][0])+','+str(line[3][1])+',0 '+
+          str(line[4][0])+','+str(line[4][1])+',0 '
           ),
         ),
       )
@@ -68,6 +71,10 @@ def changeStyle(pm):
             return KML.styleUrl('#match_style')
         else:
             return KML.styleUrl('#no_style')
+    elif pm.dogtype == "gd":
+        return KML.styleUrl('#gd_style')
+    elif pm.dogtype == "tt":
+        return KML.styleUrl('#tt_style')
     else:
         return KML.styleUrl('#dog_style')
 
@@ -140,6 +147,36 @@ def createKML(docname, fodername, placemarkList):
                             ),
                         ),
                     id="match_style",
+                    ),
+                KML.Style(
+                    KML.IconStyle(
+                        KML.scale('1.1'),
+                        KML.Icon(
+                            KML.href('http://maps.google.com/mapfiles/kml/pushpin/ltblu-pushpin.png'),
+                        ),
+                        KML.hotSpot(
+                            x="20",
+                            y="2",
+                            xunits="pixels",
+                            yunits="pixels",
+                            ),
+                        ),
+                    id="tt_style",
+                    ),
+                KML.Style(
+                    KML.IconStyle(
+                        KML.scale('1.1'),
+                        KML.Icon(
+                            KML.href('http://maps.google.com/mapfiles/kml/paddle/G.png'),
+                        ),
+                        KML.hotSpot(
+                            x="20",
+                            y="2",
+                            xunits="pixels",
+                            yunits="pixels",
+                            ),
+                        ),
+                    id="gd_style",
                     ),
                 KML.StyleMap(
                     KML.Pair(
@@ -308,6 +345,7 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
         dir = os.path.dirname(path)
         list = []
         rectangle_list = []
+
         tree = etree.parse(path)
         namespace = get_namespace(tree.getroot())
         for elem in tree.getroot().iter():
@@ -328,9 +366,10 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                             pm.id = pm.match
                             pm.handletype = "2"
                             pm.form = node.text.split("_")[2].split("-")[1][5:-1]
+                            pm.transforForm()
                             pm.account = "test_zzf"
                             pm.speedlimit = int(node.text.split("_")[4][6:-1])
-                            pm.creat_time = str(node.text.split("~")[1])
+                            pm.create_time = node.text.split("~")[1][:-1].strip()
                             list.append(pm)
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
@@ -351,12 +390,9 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                                 part = data.text.strip(",0 \n").split(",0 ")
                                 tmp = []
                                 for i, p in enumerate(part):
-                                    if i % 2 == 0:
-                                        lon = float("%.6f" % float(p.split(',')[0]))
-                                        la = float("%.6f" % float(p.split(',')[1]))
-                                        tmp.append([lon, la])
-                                    if i > 2:
-                                        break
+                                    lon = float("%.6f" % float(p.split(',')[0]))
+                                    la = float("%.6f" % float(p.split(',')[1]))
+                                    tmp.append([lon, la])
                                 rectangle_list.append(tmp)
         if not list:
             print "no data today"
@@ -380,6 +416,7 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
 def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
         dir = os.path.dirname(path)
         list = []
+
         tree = etree.parse(path)
         namespace = get_namespace(tree.getroot())
         for elem in tree.getroot().iter():
@@ -410,9 +447,11 @@ def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
                             #pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
                             #pm.id = pm.match
                             pm.handletype = "1"
-                            pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
+                            pm.form = pyexcel.getform(node.text.split("_")[2].split("(")[1].split(")")[0])
                             pm.account = "test_zzf"
                             pm.speedlimit = int(node.text.split("_")[4][2:])
+                            t = time.strptime(node.text.split("_")[-1], "%Y/%b/%d")
+                            pm.create_time = time.strftime("%Y-%m-%d", t)
                             list.append(pm)
                     if node.tag == '{0}LookAt'.format(namespace):
                         for data in node.getchildren():
@@ -426,6 +465,7 @@ def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
                                 part = data.text.split(",")
                                 pm.longitude = float("%.6f" % float(part[0]))
                                 pm.latitude = float("%.6f" % float(part[1]))
+
         if not list:
             print "no data today"
             return

@@ -290,7 +290,7 @@ def getform(num):
     num = str(num)
     if num in formdict:
         return formdict[num]
-    else :
+    else:
         return None
 
 def gethandletype(num):
