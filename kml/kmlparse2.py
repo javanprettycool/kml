@@ -75,6 +75,8 @@ def changeStyle(pm):
         return KML.styleUrl('#gd_style')
     elif pm.dogtype == "tt":
         return KML.styleUrl('#tt_style')
+    elif pm.dogtype == "del_gd":
+        return KML.styleUrl('#dgd_style')
     else:
         return KML.styleUrl('#dog_style')
 
@@ -177,6 +179,21 @@ def createKML(docname, fodername, placemarkList):
                             ),
                         ),
                     id="gd_style",
+                    ),
+                KML.Style(
+                    KML.IconStyle(
+                        KML.scale('1.1'),
+                        KML.Icon(
+                            KML.href('http://maps.google.com/mapfiles/kml/paddle/blu-circle.png'),
+                        ),
+                        KML.hotSpot(
+                            x="20",
+                            y="2",
+                            xunits="pixels",
+                            yunits="pixels",
+                            ),
+                        ),
+                    id="dgd_style",
                     ),
                 KML.StyleMap(
                     KML.Pair(

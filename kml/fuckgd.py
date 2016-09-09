@@ -57,6 +57,7 @@ def cmp_pm(pm1, pm2):
 		return -1
 	return 0
 
+
 def check_match(target, o, distance, offset):
 	if checkDistance(target, o, distance):
 		if (0 <= target.heading < offset and (0 <= o.heading < target.heading+offset or (target.heading-offset)%360 < o.heading <= 360)) \
@@ -71,12 +72,17 @@ def handle_gd(handle_list, gd_list, distance=50, offset=20):
 
 	del_list = []           #final ouput the del server point in need
 
-	#step 1: del 2013
+	#step 1: del 2013 which not match gd
 	for pm in handle_list[:]:
 		if pm.dogtype == 'server' and (pm.form == u'1测速照相' or pm.form == u'7高清摄像' or pm.form == u'16电子监控') and int(pm.create_time.split("-")[0]) <= 2013:
-			handle_list.remove(pm)
-			del_list.append(pm)
-			continue
+			to_del = True
+			for gd in gd_list:
+				if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset):     #100m
+					to_del = False
+					break
+			if to_del:
+				handle_list.remove(pm)
+				del_list.append(pm)
 
 		#del the other type
 		if pm.dogtype == 'server' and (pm.form != u'1测速照相' and pm.form != u'7高清摄像' and pm.form != u'16电子监控'):
@@ -85,36 +91,42 @@ def handle_gd(handle_list, gd_list, distance=50, offset=20):
 
 
 	#step 2: del dul
-	tmp_handle_list = handle_list[:]
-	for pm in tmp_handle_list:
-		#pm in tmp_handle_list and tmp_handle_list.remove(pm)
-		i = 0
-		while i < len(handle_list):
-			ob = handle_list[i]
+	i = 0
+	while i < len(handle_list):
+		pm = handle_list[i]
+		j = i + 1
+		while j < len(handle_list):
+			ob = handle_list[j]
 			if pm.id != ob.id and pm.form == ob.form and pm.speedlimit == ob.speedlimit and check_match(pm, ob, distance, offset):
 				handle_list.remove(ob)
 				del_list.append(ob)
-				i -= 1
-			i += 1
+				j -= 1
+			j += 1
+		i += 1
+
 
 	#step 3:handle gd
+	gd_del_list = []
 	for pm in handle_list[:]:
 		for gd in gd_list[:]:
-			if check_match(pm, gd, distance, offset):
-				if pm.account[0].lower() == 'k':
+			if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset):
+				if pm.account[0].lower() == 'k':             #留下采集人的点
 					gd_list.remove(gd)
-				elif pm.form == gd.form and pm.speedlimit != gd.speedlimit:
-					print gd.longitude, pm.name, gd.name
+					#handle_list.remove(pm)
+					gd_del_list.append(gd)
+				elif pm.form == gd.form and pm.speedlimit != gd.speedlimit:    #相对类型一样限速不同，留高德
 					handle_list.remove(pm)
 					del_list.append(pm)
-				else:
-					handle_list.remove(pm)
+					gd.copy(pm)            # 将后台点的坐标付给高德，防止因为高德采集的偏移
+				else:									#其他的，不采纳高德，也不修改后台的
+					#handle_list.remove(pm)    #匹到不同类型的点限速相同或者不同，删除
 					gd_list.remove(gd)
-
+					gd_del_list.append(gd)
+				break
 
 	handle_list.extend(gd_list)
 
-	return handle_list, del_list
+	return handle_list, del_list, gd_del_list
 
 
 	# tmp_list = handle_list[:]
@@ -189,12 +201,27 @@ print "parsing the ts,gd file... successfully"
 
 whole_list = sorted(whole_list, cmp=lambda x,y: cmp(x.longitude, y.longitude))
 
-result_list, del_list = handle_gd(whole_list, gd_list)
+result_list, del_list, gd_del= handle_gd(whole_list, gd_list)
 
 output_list = []
+#上色，被删除的点
 for p in del_list:
 	p.dogtype = "tt"
 
+#被删除的高德
+for p in gd_del:
+	p.dogtype = "del_gd"
+
+#生成kml对象
+pm_list = []
+for m in del_list:
+	pm_list.append(createElement("delete", m, operator_name))
+
+for m in result_list:
+	pm_list.append(createElement("add", m, operator_name))
+
+
+del_list.extend(gd_del)
 result_list.extend(del_list)
 for p in result_list:
 	output_list.append(kmlparse2.createPM(p))
@@ -202,12 +229,7 @@ for p in result_list:
 for r in rectangles:
 	output_list.append(kmlparse2.createLS(r))
 
-pm_list = []
-for m in del_list:
-	pm_list.append(createElement("delete", m, operator_name))
 
-for m in result_list:
-	pm_list.append(createElement("add", m, operator_name))
 
 createXls(pm_list, dir, filename, date, u"张志锋")
 

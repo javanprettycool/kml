@@ -54,5 +54,17 @@ class placemark(object):
         elif self.form == u"离开区间测速":
             self.form = u"4离开区间测速"
 
+
+    def copy(self, pm):
+        self.longitude = pm.longitude
+        self.latitude = pm.latitude
+
+    def check_diff(self, pm):
+        if self.longitude == pm.longitude and self.latitude == pm.latitude and self.form == pm.form \
+            and self.speedlimit == pm.speedlimit and self.heading == pm.heading and self.handletype == pm.handletype:
+            return True
+        else:
+            return False
+
 class rectangle(object):
     pass
