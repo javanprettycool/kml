@@ -7,6 +7,9 @@ import time
 import sys
 import os
 from placemark import *
+import kmlparse2
+import re
+
 
 formdict = {"0":u"0闯红灯照相",
     "1":u"1测速照相",
@@ -313,3 +316,25 @@ def checkForList(pm):
     else:
         return False
 
+def create_kml_from_excel(path , filename):
+
+    pm_list = []
+    book = xlrd.open_workbook(path)
+    sheet = book.sheet_by_index(0)
+    for i in range(3, sheet.nrows):
+        print sheet.ncols
+        if sheet.ncols >= 18:
+            pm = placemark()
+            pm.id = sheet.cell_value(i, 3)
+            pm.form = pm.get_type(re.findall(r'[0-9]{1,2}', sheet.cell_value(i, 4)).pop())
+            pm.handletype = sheet.cell_value(i, 1)
+            pm.account = sheet.cell_value(i, 12).lower()
+            pm.create_time = time.strftime("%Y-%m-%d",time.strptime(sheet.cell_value(i, 15), '%Y-%m-%d'))
+            pm.longitude = float(sheet.cell_value(i, 5))
+            pm.latitude = float(sheet.cell_value(i, 6))
+            pm.heading = sheet.cell_value(i, 9)
+            pm.speedlimit = sheet.cell_value(i, 10)
+            pm.name = pm.handletype+"_"+str(pm.id)+"_"+str(pm.form)+"_"+str(pm.heading)+"_"+str(pm.speedlimit)
+            pm_list.append(kmlparse2.createPM(pm))
+
+    kmlparse2.output_file(pm_list, filename, filename, path + filename + ".kml")
