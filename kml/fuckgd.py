@@ -12,7 +12,7 @@ import os
 
 EXT = ".kml"
 
-date = "2016-09-12"
+date = "2016-09-13"
 
 dir = u'F:\dataD\高速\G12珲乌高速4'  #改这个
 
@@ -84,8 +84,46 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 		return False
 
 	del_list = []           #final ouput the del server point in need
+	gd_del_list = []  #删除的高德点
+	#删除重复的高德
+	i = 0
+	while i < len(gd_list):
+		gd = gd_list[i]
+		j = i + 1
+		while j < len(gd_list):
+			ob = gd_list[j]
+			if gd.form == ob.form and gd.speedlimit == ob.speedlimit:
+				if check_match(gd, ob, distance, offset):
+					gd_list.remove(ob)
+					gd_del_list.append(ob)
+					j -= 1
+				elif check_match(gd, ob, distance, offset, True):
+					if not gd.get_brother() and not ob.get_brother():
+						gd.set_brother(ob)
+						ob.set_brother(gd)
+			j += 1
+		i += 1
 
-	#step 1: del 2013 which not match gd
+
+	i = 0
+	while i < len(gd_list):
+		gd = gd_list[i]
+		if not gd.get_brother():
+			j = 0
+			while j < len(gd_list):
+				ob = gd_list[j]
+				if ob.get_brother() and check_match(gd, ob, distance, offset):
+					gd_list.remove(gd)
+					gd_del_list.append(gd)
+					break
+				j += 1
+		i +=1
+
+	# for p in gd_list:
+	# 	print p.name, p.get_brother().name if p.get_brother() else " no"
+	# exit()
+
+	#去掉一些非关键的点
 	#tmp_gd = gd_list[:]
 	for pm in handle_list[:]:
 		# if pm.dogtype == 'server' and (pm.form in type_list) and int(pm.create_time.split("-")[0]) <= 2013:
@@ -107,36 +145,50 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 			continue
 
 
-	#match the min distance for gd
+	#gd匹配 最近的Pm
 	for gd in gd_list:
 		min_distance = MAX_INT
 		aim = None
 		pm_tmp = []
 		for pm in handle_list:
-			if pm.dogtype == 'server' and (pm.form in type_list) and int(pm.create_time.split("-")[0]) <= 2013:
-				if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset):
-					d = getDist2(pm.longitude, pm.latitude, gd.longitude, gd.latitude)
-					if d < min_distance:
-						aim = pm
-						pm_tmp.append(pm)
-				else:
-					#pm not in del_list and del_list.append(pm)
-					pass
+			if pm.dogtype == 'server' and (pm.form in type_list):
+				if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset) or check_match(pm, gd, distance, offset+10):
+					if pm.form == gd.form:
+						d = getDist2(pm.longitude, pm.latitude, gd.longitude, gd.latitude)
+						if d < min_distance:
+							aim = pm
+							pm_tmp.append(pm)
+
 		if aim and pm_tmp:
 			g = pm_tmp.pop()
-			gd.copy(g)
+			g.match_each = gd
+			gd.match_each = g
+			gd.copy(g)          #gd 匹配到的 pm，把pm坐标付给gd
+			g.heading = gd.heading  #角度取高德的
 			for p in pm_tmp:
-				p in handle_list and handle_list.remove(p)
-				p not in del_list and del_list.append(p)
-
-
-
+				handle_list.remove(p)
+				del_list.append(p)
 
 	# for p in handle_list:
 	# 	print p.name
 
+	#删除没有匹配到gd而且日期大于2013
+	for p in handle_list[:]:
+		disappear = True
+		if not p.match_each and int(p.create_time.split("-")[0]) <= 2013:
+			for gd in gd_list:
+				if not gd.match_each and check_match(p, gd, distance, offset):
+					gd.copy(p)
+					gd.match_each = p
+					p.match_each = gd
+					disappear = False
+					break
+			if disappear:
+				handle_list.remove(p)
+				del_list.append(p)
 
-	#step 2: del dul
+
+	#删除pm中重复的点
 	i = 0
 	while i < len(handle_list):
 		pm = handle_list[i]
@@ -153,7 +205,7 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 					if not pm.get_brother() and not ob.get_brother():
 						pm.set_brother(ob)
 						ob.set_brother(pm)
-			elif pm.id != ob.id and check_match(pm, ob, distance, offset):
+			elif pm.id != ob.id and check_match(pm, ob, distance, offset):   #如果相同则比较采集时间
 				kill = ob if pm.create_time > ob.create_time else pm
 				handle_list.remove(kill)
 				del_list.append(kill)
@@ -163,13 +215,13 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 
 	# for p in handle_list:
 	# 	b = p.get_brother()
+	# 	print p.name
 	# 	if isinstance(b, placemark):
-	# 		print p.name,p.longitude,p.latitude,b.name,b.longitude,b.latitude
+	# 		print p.name,b.name
 	#
 	# exit()
 
 	#step 3:handle gd
-	gd_del_list = []
 	for pm in handle_list[:]:
 		for gd in gd_list[:]:
 			if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset):
@@ -180,11 +232,31 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 				elif pm.form == gd.form and pm.speedlimit != gd.speedlimit:    #相对类型一样限速不同，留高德
 					if int(pm.create_time.split("-")[0]) <= 2013:
 						del_list.append(pm)
+						handle_list.remove(pm)
 						gd.copy(pm)            # 将后台点的坐标付给高德，防止因为高德采集的偏移
 					else:
 						gd_list.remove(gd)   #匹到不同类型的点限速相同或者不同，删除
 						gd_del_list.append(gd)
-
+				elif pm.form != gd.form and pm.get_brother():      #对于类型不同的gd，检查相邻的点的匹配情况
+					bro = pm.get_brother()
+					if bro.match_each:								#相邻点有匹配的，比较相邻点匹配的gd和gd类型，相同则都替换pm
+						if bro.match_each.form == gd.form:
+							del_list.append(pm)
+							handle_list.remove(pm)
+						else:
+							if int(pm.create_time.split("-")[0]) <= 2013:
+								del_list.append(pm)
+								handle_list.remove(pm)
+							else:
+								gd_list.remove(gd)
+								gd_del_list.append(gd)
+					else:                                              #相邻点没有匹配的
+						if int(pm.create_time.split("-")[0]) <= 2013:         #gd 匹配 pm 时间小于 2013删除
+							del_list.append(pm)
+							handle_list.remove(pm)
+						else:                                #留pm
+							gd_list.remove(gd)
+							gd_del_list.append(gd)
 				else:									#其他的，不采纳高德，也不修改后台的
 					gd_list.remove(gd)   #匹到不同类型的点限速相同或者不同，删除
 					gd_del_list.append(gd)
@@ -195,7 +267,6 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 					gd_list.remove(gd)   #匹到不同类型的点限速相同或者不同，删除
 					gd_del_list.append(gd)
 
-
 	handle_list.extend(gd_list)
 
 	return handle_list, del_list, gd_del_list
@@ -205,7 +276,7 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 	# final_list = handle_list[:]
 	#
 	# for pm in handle_list:
-	# 	#step 2: remove match pm and gd
+	# 	#step 2: remove match_each pm and gd
 	# 	target = pm
 	# 	del_L = []  #del after loop
 	# 	alone = True
@@ -214,13 +285,13 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 	# 		#pm in tmp_list and tmp_list.remove(pm)
 	# 		for o in tmp_list:
 	# 			if o.dogtype == 'server':
-	# 				if target.form == o.form and target.speedlimit == o.speedlimit and check_match(target, o, distance, offset):  #50m match
+	# 				if target.form == o.form and target.speedlimit == o.speedlimit and check_match(target, o, distance, offset):  #50m match_each
 	# 					del_L.append(o)
 	# 					tt_del_list.append(o)
 	# 					final_list.remove(o)
 	# 					clear = True
 	# 					alone = False
-	# 				elif alone and getDist2(target.longitude, target.latitude, o.longitude, o.latitude) < distance+50: 	#del alone point < 100m not match
+	# 				elif alone and getDist2(target.longitude, target.latitude, o.longitude, o.latitude) < distance+50: 	#del alone point < 100m not match_each
 	# 					clear = True
 	#
 	# 			if o.dogtype == 'gd' and check_match(target, o, distance, offset):
@@ -237,7 +308,7 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 	# 			final_list.remove(target)
 	# 			tmp_list.remove(target)
 	#
-	# 		#del the match point
+	# 		#del the match_each point
 	# 		for p in del_L:
 	# 			p in tmp_list and tmp_list.remove(p)
 	#
@@ -268,7 +339,11 @@ print "parsing the ts,gd file... successfully"
 
 whole_list = sorted(whole_list, cmp=lambda x,y: cmp(x.longitude, y.longitude))
 
+print "tt count: " + str(len(whole_list)) + " gd count:" + str(len(gd_list))
+
 result_list, del_list, gd_del= handle_gd(whole_list, gd_list)
+
+
 
 output_list = []
 #上色，被删除的点

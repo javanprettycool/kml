@@ -44,6 +44,7 @@ class placemark(object):
     __broter = None
 
     scale = []    #存放周围的点
+    match_each = None
 
     def __init__(self, name="", dogtype="", id="", form="", handletype="", match ="", longitude=0, latitude=0, heading=0, speedlimit=0, account="", time="", cost="", matched="", create_time="",md5=""):
         self.name = name

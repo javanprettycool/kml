@@ -4,17 +4,33 @@ import time
 import xlrd
 import re
 import kmlparse2
+from process import *
+#from fuckgd import check_match
 
 
 
+gd = placemark()
+ob = placemark()
+
+gd.longitude = 114.215440
+gd.latitdue = 22.604880
+gd.heading = 326
+ob.longitude = 114.216000
+ob.latitdue = 22.605160
+ob.heading =
+
+print getDist2(gd.longitude,gd.latitude,ob.longitude,ob.latitude)
+#print check_match(gd, ob, 100, 20, True)
+
+
+exit()
 
 
 
-
-dir = u"F:\dataD\高速\G1113丹阜高速\G1113丹阜高速.xls"
+dir = u"F:\dataD\高速\G25长深高速4\G25长深高速4.xls"
 #path = unicode(dir,  "utf8")
 
-filename = u"G1113丹阜高速_test"
+filename = u"G25长深高速4_test"
 
 pm_list = []
 book = xlrd.open_workbook(dir)
