@@ -8,13 +8,14 @@ from pyexcel import *
 from process import *
 import re
 import os
+from lonlat_util import check_match
 
 
 EXT = ".kml"
 
-date = "2016-09-13"
+date = "2016-09-18"
 
-dir = u'F:\dataD\高速\G12珲乌高速4'  #改这个
+dir = u'F:\dataD\高速\G10绥满高速2'  #改这个
 
 operator_name = "gd_test_zzf"
 
@@ -64,20 +65,6 @@ def cmp_pm(pm1, pm2):
 	if pm1.latitude < pm2.latitude and pm1.longitude < pm2.longitude:
 		return -1
 	return 0
-
-
-def check_match(target, o, distance, offset, reserve=False):
-
-	angle = target.heading
-	if reserve:
-		angle = ( angle + 180 ) % 360    #反向匹配
-
-	if checkDistance(target, o, distance):
-		if (0 <= angle < offset and (0 <= o.heading < angle+offset or (angle-offset)%360 < o.heading <= 360)) \
-			or (360-offset < angle <= 360 and (0 <= o.heading < (angle+offset) % 360 or angle-offset < o.heading <= 360)) \
-			or (angle-offset < o.heading < angle+offset):
-			return True
-	return False
 
 def handle_gd(handle_list, gd_list, distance=100, offset=20):
 	if not handle_list:
@@ -149,15 +136,19 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 	for gd in gd_list:
 		min_distance = MAX_INT
 		aim = None
+		aim2 = None
 		pm_tmp = []
 		for pm in handle_list:
 			if pm.dogtype == 'server' and (pm.form in type_list):
 				if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset) or check_match(pm, gd, distance, offset+10):
+					d = getDist2(pm.longitude, pm.latitude, gd.longitude, gd.latitude)
 					if pm.form == gd.form:
-						d = getDist2(pm.longitude, pm.latitude, gd.longitude, gd.latitude)
 						if d < min_distance:
 							aim = pm
 							pm_tmp.append(pm)
+					else:
+						if d < min_distance:
+							aim2 = pm
 
 		if aim and pm_tmp:
 			g = pm_tmp.pop()
@@ -168,6 +159,12 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 			for p in pm_tmp:
 				handle_list.remove(p)
 				del_list.append(p)
+		else:
+			if aim2:
+				aim2.match_each = gd
+				gd.match_each = aim2
+				gd.copy(aim2)
+				aim2.heading = gd.heading
 
 	# for p in handle_list:
 	# 	print p.name

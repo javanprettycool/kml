@@ -67,7 +67,7 @@ def isDog(type):
 
 def changeStyle(pm):
     if pm.dogtype == "new":
-        if pm.handletype == "2" or pm.handletype == "3":
+        if pm.handletype == placemark.HANDLE_UPDATE or pm.handletype == placemark.HANDLE_DELETE:
             return KML.styleUrl('#match_style')
         else:
             return KML.styleUrl('#no_style')
@@ -240,19 +240,20 @@ def parse_pnd(path, operator_name="test_zzf"):
                     pm.name = node.text
                     if node.text[0] == "[":
                         pm.dogtype = "new"
-                        pm.id = node.text.split("_")[1][:-1]
-                        pm.handletype = node.text.split("_")[2][0]
+                        pm.id = int(node.text.split("_")[1][:-1])
+                        pm.handletype = int(node.text.split("_")[2][0])
                         pm.match = node.text.split("_")[3][1:-1]
                         pm.form = node.text.split("_")[4].split("(")[1].split(")")[0]
                         pm.speedlimit = node.text.split("_")[6].split("(")[0][2:-2]
                         pm.account = node.text.split("(")[-1].split(")")[0]
-
+                        pm.create_time = node.text.split("@")[1]
                         handle_list.append(pm)
                     elif node.text[0] == "!":
                         pm.dogtype = "server"
                         pm.id = node.text.split("_")[1]
                         pm.speedlimit = node.text.split("_")[4][2:]
                         pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
+                        pm.account = node.text.split(":")[1]
                         dog_list.append(pm)
                     else:
                         try:
@@ -312,7 +313,7 @@ def parse_caiji(path, operator_name="test_zzf"):
                         if node.text[1] == u"采":
                             pm.dogtype = "new"
                             pm.id = node.text.split("_")[1][:-1]
-                            pm.handletype = node.text.split("_")[2][0]
+                            pm.handletype = int(node.text.split("_")[2][0])
                             pm.form = node.text.split("_")[4].split("(")[1].split(")")[0]
                             pm.speedlimit = node.text.split("_")[6][2:]
                             pm.account = node.text.split("@")[1][0:-12]
@@ -322,6 +323,7 @@ def parse_caiji(path, operator_name="test_zzf"):
                             pm.id = node.text.split("_")[1][:-1]
                             pm.speedlimit = node.text.split("_")[4][2:]
                             pm.form = node.text.split("_")[2].split("(")[1].split(")")[0]
+                            pm.account = node.text.split(":")[1]
                             dog_list.append(pm)
                         else:
                             try:
@@ -585,31 +587,41 @@ def parse_ts_from_device(path, filename="tt", date="", operator_name=u"张志锋
 
 def outputKml(handle_tuple, docname, fodername, dir, filename, segment=1):
     whole_pm_list = []
-    pm_list = []
     dog_pm_list = []
     whole_list = handle_tuple[0]
     handle_list = handle_tuple[1]
     dog_list = handle_tuple[2]
+    pm_count = 0
 
-    for pm in whole_list:
-        whole_pm_list.append(createPM(pm))
-
-    for pm in handle_list:
-        pm_list.append(createPM(pm))
+    for p in handle_list:
+        pm_count += len(p)
 
     for dog in dog_list:
         dog_pm_list.append(createPM(dog))
 
-    if segment > 1 and segment < len(handle_list):
-        i, j = 0, 1
-        while(i < len(pm_list)):
-            slist = pm_list[i:i+segment]
+    if 1 < segment < pm_count:
+        i, count, slist = 0, 0, []
+        for p in handle_list:
+            count += len(p)
+            for o in p:
+                slist.append(createPM(o))
+            if count >= segment:
+                i += 1
+                count = 0
+                slist.extend(dog_pm_list)
+                path = dir + filename + "(" + str(i) + ")" + ".kml"
+                output_file(slist, docname, fodername, path)
+                slist = []
+        if count != 0:
             slist.extend(dog_pm_list)
-            path = dir + filename + "(" + str(j) + ")" + ".kml"
+            path = dir + filename + "(" + str(i+1) + ")" + ".kml"
             output_file(slist, docname, fodername, path)
-            i = i + segment
-            j += 1
+
     else:
+        for p in handle_list:
+            for o in p:
+                whole_pm_list.append(createPM(o))
+        whole_pm_list.extend(dog_pm_list)
         output_file(whole_pm_list, docname, fodername, dir + filename + ".kml")
 
 

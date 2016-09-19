@@ -46,6 +46,18 @@ def checkDistance(p, dog, space=50):
 	else:
 		return False
 
+def check_match(target, o, distance, offset, reserve=False):
+	angle = target.heading
+	if reserve:
+		angle = ( angle + 180 ) % 360    #反向匹配
+
+	if checkDistance(target, o, distance):
+		if (0 <= angle < offset and (0 <= o.heading < angle+offset or (angle-offset)%360 < o.heading <= 360)) \
+			or (360-offset < angle <= 360 and (0 <= o.heading < (angle+offset) % 360 or angle-offset < o.heading <= 360)) \
+			or (angle-offset < o.heading < angle+offset):
+			return True
+	return False
+
 
 #检查修改和删除的匹配
 def checkMatchFromDogList(placemark, dog_list):

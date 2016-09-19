@@ -9,10 +9,7 @@ from placemark import placemark
 import os
 
 MAX_INT = sys.maxint
-
 id_for_fee_list = []
-remove_list = []
-
 
 def attr_gbk(elem, name):
     return elem.attrib.get(name).encode("GBK")
@@ -32,7 +29,8 @@ def checkRange(node, list, i=0):
 
 
 def checkLalon(p, pre):
-	if pre is None: return True
+	if pre is None:
+		return True
 	return p != pre and p.longitude == pre.longitude and p.latitude == pre.latitude and p.handletype == pre.handletype
 
 
@@ -126,7 +124,7 @@ def handleForList(list):
 
 
 
-def proc_del(list, doglist, offset=20):
+def proc_del(list, doglist, dist=50, offset=20):
 	del_set = set()
 	min_dis = MAX_INT
 	dog_shadow = []
@@ -135,7 +133,7 @@ def proc_del(list, doglist, offset=20):
 		min_dis = MAX_INT
 		dog_shadow = []
 		for dog in doglist:
-			if dog.id == p.match or (p.form == dog.form and checkDistance(p, dog, 50)):
+			if dog.id == p.match or (p.form == dog.form and (checkDistance(p, dog, dist) or checkDistance(p, dog, dist*2))):
 				distance = getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude)
 				if (0 <= p.heading < offset and (0 <= dog.heading < p.heading+offset or (p.heading-offset)%360 < dog.heading <= 360)) \
 					or (360-offset < p.heading <= 360 and (0 <= dog.heading < (p.heading+offset) % 360 or p.heading-offset < dog.heading <= 360)) \
@@ -151,7 +149,16 @@ def proc_del(list, doglist, offset=20):
 			p.longitude = dog_shadow[1]
 			p.latitude = dog_shadow[2]
 			dog_shadow[3].matched = p.id
-	return del_set
+			if p.account.lower() != dog_shadow[3].account.lower():
+				p.need_to_pay = True
+
+	fee_id = None
+	for p in list:
+		if p.need_to_pay:
+			fee_id = p.id
+			break
+
+	return fee_id
 
 
 def proc_update(list, doglist, offset=20):
@@ -172,34 +179,66 @@ def proc_update(list, doglist, offset=20):
 					#dog_list.append(dog)
 					if distance < min_dis:
 						min_dis = distance
-						dog_shadow = [dog.id, dog.longitude, dog.latitude, dog.heading]
+						dog_shadow = [dog.id, dog.longitude, dog.latitude, dog.heading, dog.account]
 		if dog_shadow:
 			p.name = p.name if p.match != "?" else p.name.replace("?", dog_shadow[0])
 			p.match = dog_shadow[0]
 			p.longitude = dog_shadow[1]
 			p.latitude = dog_shadow[2]
 			p.heading = dog_shadow[3]
-	return update_set
+			if p.account.lower() != dog_shadow[4].lower():
+				p.need_to_pay = True
+
+	fee_id = None
+	for p in list:
+		if p.need_to_pay:
+			fee_id = p.id
+			break
+
+	return fee_id
 
 
-def proc_add(list, doglist, offset=20):
+def proc_add(list, doglist, distance=50, offset=20):
 
 	tmp_list = [x for x in list]
 	for p in tmp_list:
 		for dog in doglist:
-			if checkDistance(p, dog, 50) and p.form == dog.form and p.speedlimit == dog.speedlimit:
-				#distance = getDist2(p.longitude, p.latitude, dog.longitude, dog.latitude)
-				if (0 <= p.heading < offset and (0 <= dog.heading < p.heading+offset or (p.heading-offset)%360 < dog.heading <= 360)) \
-					or (360-offset < p.heading <= 360 and (0 <= dog.heading < (p.heading+offset) % 360 or p.heading-offset < dog.heading <= 360)) \
-					or (p.heading-offset < dog.heading < p.heading+offset):
-					remove_list.append(p)
-					if p.id in id_for_fee_list:
-						id_for_fee_list.remove(p.id)        #删除重复计费的点
+			if p.form == dog.form:   #新增类型相同,可以扩大匹配范围
+				if check_match(p, dog, distance, offset) or check_match(p, dog, distance*2, offset+10) or check_match(p, dog, distance*2, offset+20):
+					if p.speedlimit == dog.speedlimit:
+						list.remove(p)
+						if p.id in id_for_fee_list:
+							id_for_fee_list.remove(p.id)        #删除重复计费的点
+						break
+					else:
+						if str(p.account).lower() == str(dog.account).lower():
+							p.change_match(dog)
+						else:
+							p.change_match(dog)
+							p.need_to_pay = True
+			else:                 #新增类型不相同,扩大匹配距离
+				if check_match(p, dog, distance, offset) and dog.form != "27":  #不匹配27加油站
+					if str(p.account).lower() == str(dog.account).lower():   #比较是否是同一个采集员
+						p.change_match(dog)
+					else:
+						p.change_match(dog)
+						p.need_to_pay = True
+
+	fee_id = None       #返回需要计费的id，一组取一个
+	for p in list:
+		if p.need_to_pay:
+			fee_id = p.id
+			break
+	return fee_id
+
+
 
 
 def operate(list, dir, dog_list):
 	pre = None
 	handle_list = []
+	id_for_fee_list = []
+	result = []
 	dog = [x for x in dog_list]     #鎷疯礉
 	for p in list:
 		if checkLalon(p, pre):
@@ -207,67 +246,97 @@ def operate(list, dir, dog_list):
 			handle_list.append(p)
 		else:
 			handle_type = handle_list[-1].handletype
-			id_for_fee_list.append(pre.id)           #这个必须在handle前面
-			handle(handle_type, handle_list, dog)    #处理点
+			fee = handle(handle_type, handle_list, dog)    #返回算费用的点id,不算费用返回none
+			if fee:
+				id_for_fee_list.append(fee)     #这个必须在handle前面
+			result.append(handle_list)
 			pre = p
 			handle_list = [p]
 
 	if len(handle_list) != 0:    #鏀跺熬
 		if len(handle_list) >= 1:
-			id_for_fee_list.append(handle_list[-1].id)    #这个必须在handle前面
-			handle(handle_list[-1].handletype, handle_list, dog)
-		else:
-			pass
+			fee = handle(handle_list[-1].handletype, handle_list, dog)
+			if fee:
+				id_for_fee_list.append(fee)     #这个必须在handle前面
+		result.append(handle_list)
 
 	if not os.path.exists(dir):
 		os.makedirs(dir)
 
-	#删除新增红灯与狗点重复的点
-	for p in remove_list:
-		if p in list:
-			list.remove(p)
 
-	#璐圭敤id琛�
+	#最后检测一下
+	distance = 50
+	offset = 20
+	new_list = [x for j in result for x in j]
+	dul_list = []
+	i = 0
+	while i < len(new_list):
+		j = i + 1
+		p1 = new_list[i]
+		while j <len(new_list):
+			p2 = new_list[j]
+			if p1.cmp(p2):
+				if p1.handletype == p2.handletype:
+					dul_list.append(p2 if p1.create_time > p2.create_time else p1)
+				else:
+					dul_list.append(p1 if p1.handletype > p2.handletype else p2)
+			j += 1
+		i += 1
+
+	for j in dul_list:
+		for q in result[:]:
+			j in q and q.remove(j)
+		j in id_for_fee_list and id_for_fee_list.remove(j)
+
+	#exit()
 	createXlsForFee(id_for_fee_list, dir)
 
-	#鍘熺嫍id琛�
 	createXlsForDog(dog_list, dir)
 
+	return result
 
-def handle(handle_type, handle_list, dog_list):
-	if handle_type == "1":
-		add(handle_list ,dog_list)
-	elif handle_type == "2":
-		update(handle_list, dog_list)
-	elif handle_type == "3":
-		delete(handle_list, dog_list)
+
+def handle(handle_type, handle_list, dog_list, fee_id=None):
+	to_type = int(handle_type)
+	if to_type == placemark.HANDLE_ADD:
+		fee_id = add(handle_list ,dog_list)
+	elif to_type == placemark.HANDLE_UPDATE:
+		fee_id = update(handle_list, dog_list)
+	elif to_type == placemark.HANDLE_DELETE:
+		fee_id = delete(handle_list, dog_list)
+	return fee_id
 
 
 def add(list, dog_list):
 	form = list[-1].form
 	if form == "1" or form == "2":  #流动测速和测速不处理
-		proc_add(list, dog_list)
+		fee_id = proc_add(list, dog_list)
 	elif form == "0":       #单检查匹配重复红灯和测速
 		handleForList(list)
-		proc_add(list, dog_list)
+		fee_id = proc_add(list, dog_list, 80, 30)
+	elif form == "16" or form == "7":
+		handleForList(list)
+		fee_id = proc_add(list, dog_list)
 	else:
+		fee_id = list[-1].id
 		handleForList(list)
 
+	return fee_id
 
 
 
 def update(list, dog_list):
 	handleForList(list)
-	proc_update(list, dog_list)
-
+	fee_id = proc_update(list, dog_list)
+	return fee_id
 
 def delete(list, dog_list):
 	#form = list[-1].form
 	for p in list:
 		if p.match == "?":
-			transfor(p, 30, p.heading)
-	proc_del(list, dog_list)
-
+			transfor(p, 50, p.heading)    #反向
+	fee_id = proc_del(list, dog_list)
+	return fee_id
 
 #dog_id 鍒濆鐨勭嫍id琛紝 dog_list澶勭悊杩囧悗鐨勭嫍琛�
 def proc_mod(list, id_for_fee_list, original_dog_list, dog_list, operator_name):
@@ -279,12 +348,13 @@ def proc_mod(list, id_for_fee_list, original_dog_list, dog_list, operator_name):
 			if checkMatchFromDogList(pm, dog_list):
 				pmlist.append(pm)
 		if pm.dogtype == "server":                    #处理被修改或删除的狗点
-			for old_dog in original_dog_list:
+			for old_dog in original_dog_list[:]:
 				if pm.id == old_dog.id:
 					if checkChange(pm, old_dog):
 						pmlist.append(createElement("update", pm, operator_name))
 					original_dog_list.remove(old_dog)
 
+	#不在原来的dog中，即留下的的dog，删除
 	for dog in original_dog_list:
 		pmlist.append(createElement("delete", dog, operator_name))
 
