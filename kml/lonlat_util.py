@@ -67,7 +67,7 @@ def checkMatchFromDogList(placemark, dog_list):
 	target = None
 	dog_list_copy = [x for x in dog_list]
 	delete_list = []
-	if placemark.handletype == "1":      #是新增类型返回
+	if placemark.handletype == placemark.HANDLE_ADD:      #是新增类型返回
 		# catch = 1
 		return True
 
@@ -86,7 +86,7 @@ def checkMatchFromDogList(placemark, dog_list):
 						catch = 1
 						target = dog
 		if catch:
-			if placemark.handletype == "2" and placemark.speedlimit == target.speedlimit and placemark.form == target.form:
+			if placemark.handletype == placemark.HANDLE_UPDATE and placemark.speedlimit == target.speedlimit and placemark.form == target.form:
 				print u"匹配的点未做修改："+placemark.name
 				return False
 			placemark.match = target.id

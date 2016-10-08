@@ -10,32 +10,35 @@ from process import *
 
 EXT = ".kml"
 
-date = "2016-09-05"
+date = "2016-09-29"
 
-dir = u'F:\dataD\投诉\\0902'  #改这个
+dir = u'F:\dataD\高速\未处理\\0929未处理\lin'  #改这个
 
 dir = dir.replace("\\","/")
 
 if dir[-1] != "/":
     dir+="/"
 
-pnd_filename = u"矩形txt-09月-02日-2016-镇骆路_tt_0902"
-done_filename = u"local4"
+pnd_filename = u"矩形txt-09月-29日-2016-(139KM)漳州市漳浦县赤岭乡油坑村7--泉州市洛江区万安街8_tt_0929"
+done_filename = u"local7"
 
 pmlist = []
 
 kml_path = dir + pnd_filename + EXT
 done_path = dir + done_filename + EXT
 
-kml_list = kmlparse2.parse_ts(kml_path)
-done_list = kmlparse2.parse_ts(done_path)
+kml_list,rl = kmlparse2.parse_ts(kml_path)
+done_list,rl = kmlparse2.parse_ts(done_path)
 
 copy_kml = [x for x in kml_list]
 
 for p in kml_list:
     for q in done_list:
-        if p.name == q.name:
+        if p.id == q.id:
             copy_kml.remove(p)
+            if checkChange(p, q):
+                pmlist.append(createElement("update", q, "by_gd_zzf"))
+            break
 
 
 for p in copy_kml:

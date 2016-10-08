@@ -13,9 +13,9 @@ from lonlat_util import check_match
 
 EXT = ".kml"
 
-date = "2016-09-18"
+date = "2016-09-30"
 
-dir = u'F:\dataD\高速\G10绥满高速2'  #改这个
+dir = u'F:\dataD\高速\未处理\929未处理\gaosu\S26抚长高速'  #改这个
 
 operator_name = "gd_test_zzf"
 
@@ -25,6 +25,9 @@ dir = dir.replace("\\","/")
 
 if dir[-1] != "/":
     dir+="/"
+
+
+
 
 type_list = [
 	u'1测速照相',
@@ -53,6 +56,21 @@ def parsefile(dir):
 						gd_file1 = start + "--" + destination
 						gd_file2 = destination + "--" + start
 						if (f.find(gd_file1) >= 0 or f.find(gd_file2) >= 0) and f.find('矩形txt') < 0:
+							file_dict[tt_filename].append(f)
+	return file_dict
+
+def parsefile2(dir):
+	file_dict = {}
+	for i in os.listdir(dir):
+		if os.path.isfile(os.path.join(dir,i)):
+			if i.find('矩形txt') >= 0:
+				tt_filename = i
+				file_dict[tt_filename] = []
+				destination = tt_filename.split('-')[-1].split('_')[0]
+
+				for f in os.listdir(dir):
+					if os.path.isfile(os.path.join(dir,f)):
+						if f.find(destination) >= 0 and f.find('矩形txt') < 0:
 							file_dict[tt_filename].append(f)
 	return file_dict
 
@@ -91,7 +109,6 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 			j += 1
 		i += 1
 
-
 	i = 0
 	while i < len(gd_list):
 		gd = gd_list[i]
@@ -127,10 +144,56 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 		# 		del_list.append(pm)
 
 		#del the other type
-		if pm.dogtype == 'server' and (pm.form != u'1测速照相' and pm.form != u'7高清摄像' and pm.form != u'16电子监控'):
+		if pm.dogtype == 'server' and (pm.form != u'1测速照相' and pm.form != u'7高清摄像' and pm.form != u'16电子监控' and pm.form != u'2流动测速'):
 			pm in handle_list and handle_list.remove(pm)
 			continue
 
+	#去掉一些非关键的点
+	#tmp_gd = gd_list[:]
+	for pm in gd_list[:]:
+		# if pm.dogtype == 'server' and (pm.form in type_list) and int(pm.create_time.split("-")[0]) <= 2013:
+		# 	to_del = True
+		# 	for gd in tmp_gd:
+		# 		if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset):     #100m
+		# 			to_del = False
+		# 			tmp_gd.remove(gd)
+		# 			print pm.name, gd.name
+		# 			break
+		#
+		# 	if to_del:
+		# 		handle_list.remove(pm)
+		# 		del_list.append(pm)
+
+		#del the other type
+		if pm.form == u"45违规拍照":
+			pm in gd_list and gd_list.remove(pm)
+			continue
+
+	#删除pm中重复的点
+	i = 0
+	while i < len(handle_list):
+		pm = handle_list[i]
+		j = i + 1
+		while j < len(handle_list):
+			ob = handle_list[j]
+			if pm.id != ob.id and pm.form == ob.form and pm.speedlimit == ob.speedlimit:
+				if check_match(pm, ob, distance, offset):
+					handle_list.remove(ob)
+					del_list.append(ob)
+					j -= 1
+				elif check_match(pm, ob, distance, offset, True):    #匹配相邻点
+					if not pm.get_brother() and not ob.get_brother():
+						pm.set_brother(ob)
+						ob.set_brother(pm)
+			elif pm.id != ob.id and check_match(pm, ob, distance, offset):   #如果相同则比较采集时间
+				kill = ob if pm.create_time > ob.create_time or pm.speedlimit > ob.speedlimit or int(pm.id.split(',')[-1]) > int(ob.id.split(',')[-1]) else pm #位置相同时，以此比较时间限速id大小
+				handle_list.remove(kill)
+				del_list.append(kill)
+				if pm == kill:   #pm = pm时，防止外循环重复判断
+					break
+				j -= 1
+			j += 1
+		i += 1
 
 	#gd匹配 最近的Pm
 	for gd in gd_list:
@@ -152,7 +215,14 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 
 		if aim and pm_tmp:
 			g = pm_tmp.pop()
-			g.match_each = gd
+			if not g.match_each:      #匹配到优先gd的类型与pm类型相同才取
+				g.match_each = gd
+			else:
+				if g.match_each.form == g.form:
+					pass
+				elif g.form == gd.form:
+					g.match_each = gd
+
 			gd.match_each = g
 			gd.copy(g)          #gd 匹配到的 pm，把pm坐标付给gd
 			g.heading = gd.heading  #角度取高德的
@@ -184,32 +254,6 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 				handle_list.remove(p)
 				del_list.append(p)
 
-
-	#删除pm中重复的点
-	i = 0
-	while i < len(handle_list):
-		pm = handle_list[i]
-		j = i + 1
-		while j < len(handle_list):
-			ob = handle_list[j]
-			if pm.id != ob.id and pm.form == ob.form and pm.speedlimit == ob.speedlimit:
-				if check_match(pm, ob, distance, offset):
-					handle_list.remove(ob)
-					del_list.append(ob)
-					j -= 1
-
-				if check_match(pm, ob, distance, offset, True):    #匹配相邻点
-					if not pm.get_brother() and not ob.get_brother():
-						pm.set_brother(ob)
-						ob.set_brother(pm)
-			elif pm.id != ob.id and check_match(pm, ob, distance, offset):   #如果相同则比较采集时间
-				kill = ob if pm.create_time > ob.create_time else pm
-				handle_list.remove(kill)
-				del_list.append(kill)
-				j -= 1
-			j += 1
-		i += 1
-
 	# for p in handle_list:
 	# 	b = p.get_brother()
 	# 	print p.name
@@ -220,10 +264,11 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 
 	#step 3:handle gd
 	for pm in handle_list[:]:
+		#print pm.name,pm.get_brother().name if pm.get_brother() else ""
 		for gd in gd_list[:]:
 			if check_match(pm, gd, distance, offset) or check_match(pm, gd, distance*2, offset):
 				#pm in handle_list and handle_list.remove(pm)  #以防高德重复采，list index报错
-				if pm.account[0].lower() == 'k':             #留下采集人的点
+				if pm.account[0].lower() == 'k' or pm.form == u"0闯红灯拍照":             #留下采集人的点
 					gd_list.remove(gd)
 					gd_del_list.append(gd)
 				elif pm.form == gd.form and pm.speedlimit != gd.speedlimit:    #相对类型一样限速不同，留高德
@@ -232,23 +277,34 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 						handle_list.remove(pm)
 						gd.copy(pm)            # 将后台点的坐标付给高德，防止因为高德采集的偏移
 					else:
-						gd_list.remove(gd)   #匹到不同类型的点限速相同或者不同，删除
+						gd_list.remove(gd)   #匹到相同类型的点时间取大于2013
 						gd_del_list.append(gd)
 				elif pm.form != gd.form and pm.get_brother():      #对于类型不同的gd，检查相邻的点的匹配情况
 					bro = pm.get_brother()
 					if bro.match_each:								#相邻点有匹配的，比较相邻点匹配的gd和gd类型，相同则都替换pm
+						#比较相邻点的类型：
+						#相邻点有匹配到gd时，比较gd与相邻点的类型
+						#pm和他相邻的点匹配相同类型的gd则都取gd
 						if bro.match_each.form == gd.form:
 							del_list.append(pm)
 							handle_list.remove(pm)
 						else:
-							if int(pm.create_time.split("-")[0]) <= 2013:
-								del_list.append(pm)
-								handle_list.remove(pm)
-							else:
+							# if pm.form == bro.match_each.form:
+							# 	gd_list.remove(gd)
+							# 	gd_del_list.append(gd)
+							# elif int(pm.create_time.split("-")[0]) <= 2013:
+							# 	del_list.append(pm)
+							# 	handle_list.remove(pm)
+							# else:
+							#pm和相邻的点匹配到不通的类型的gd时，留pm
 								gd_list.remove(gd)
 								gd_del_list.append(gd)
+						break
 					else:                                              #相邻点没有匹配的
-						if int(pm.create_time.split("-")[0]) <= 2013:         #gd 匹配 pm 时间小于 2013删除
+						if gd.speedlimit == pm.speedlimit:
+							gd_list.remove(gd)
+							gd_del_list.append(gd)
+						if gd.speedlimit > pm.speedlimit and int(pm.create_time.split("-")[0]) <= 2013:         #gd 匹配 pm 时间小于 2013 和 限速小的删除
 							del_list.append(pm)
 							handle_list.remove(pm)
 						else:                                #留pm
@@ -257,7 +313,6 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 				else:									#其他的，不采纳高德，也不修改后台的
 					gd_list.remove(gd)   #匹到不同类型的点限速相同或者不同，删除
 					gd_del_list.append(gd)
-				break
 			else:
 				bo = pm.get_brother()
 				if bo and check_match(bo, gd, distance, offset, True):    #通过相邻的点反向匹配
@@ -318,6 +373,7 @@ def handle_gd(handle_list, gd_list, distance=100, offset=20):
 
 print "handle the gd collection track..."
 file_dict = parsefile(dir)
+
 whole_list = []
 gd_list = []
 rectangles = []
@@ -339,8 +395,6 @@ whole_list = sorted(whole_list, cmp=lambda x,y: cmp(x.longitude, y.longitude))
 print "tt count: " + str(len(whole_list)) + " gd count:" + str(len(gd_list))
 
 result_list, del_list, gd_del= handle_gd(whole_list, gd_list)
-
-
 
 output_list = []
 #上色，被删除的点
@@ -368,8 +422,6 @@ for p in result_list:
 
 for r in rectangles:
 	output_list.append(kmlparse2.createLS(r))
-
-
 
 createXls(pm_list, dir, filename, date, u"张志锋")
 

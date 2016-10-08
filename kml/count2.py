@@ -13,17 +13,29 @@ import re
 from pyexcel import excelobject
 from check import checkexcel
 
-sheet1_name = "2016年9月份采集费用补贴（日）统计表"
-sheet2_name = "2016年9月份采集费用补贴（月）统计表"
-sheet3_name = "9月份需补贴采集数据"
-dir = "E:/count/"                       #当月所有文件
-outputfile = u"E:/test/2016年9月采集费用补贴日&月分析表.xls"
+month = 9
+year = 2016    #改这两个咯
 
-account_file_path = u"F:/dataD/采集账号.xls"        #采集账号表
-save_dir = u"E:/test/"                              #最后保存统计excel地址
-date = u"2016年9月"                                #时间
+date = str(year) + u"年" + str(month) + u"月"
+
+sheet1_name = date+u"份采集费用补贴（日）统计表"
+sheet2_name = date+u"份采集费用补贴（月）统计表"
+sheet3_name = date+u"份需补贴采集数据"
+dir = u"F:/dataD/"+str(year)+u"/"+str(month)+u"月/"                     #当月所有文件
+save_dir = u"F:/dataD/"+str(year)+u"/"+str(month)+u"月/"+date+u"采集费用补贴统计/"
+outputfile = save_dir + date + u"采集费用补贴日&月分析表.xls"
+account_file_path = u"F:/dataD/采集账号.xls"        #采集账号表                           #最后保存统计excel地址
 
 
+timeArray = time.localtime(time.time())
+otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
+
+
+wbk = xlwt.Workbook(encoding='utf-8', style_compression=0)
+isheet1 = wbk.add_sheet(sheet1_name, cell_overwrite_ok=True)
+isheet2 = wbk.add_sheet(sheet2_name, cell_overwrite_ok=True)
+isheet3 = wbk.add_sheet(sheet3_name, cell_overwrite_ok=True)
+row_index = 1
 
 filename = "down"
 dict = {"0":u"0闯红灯照相",
@@ -67,7 +79,13 @@ def formatDate(time):
     time = str(time)
     return time[:4] + "-" + time[4:6] + "-" + time[6:8]
 
-
+def walkdir(dir, pattern, callback, *args):
+	for f in os.listdir(dir):
+		d = os.path.join(dir, f)
+		if os.path.isfile(d) and re.match(pattern, f):
+			callback(d, *args)
+		elif os.path.isdir(d):
+			walkdir(d, pattern, callback, *args)
 
 def create_uni_excel(sheet_name, time_list):
     wbk = xlwt.Workbook(encoding='utf-8', style_compression=0)
@@ -85,14 +103,58 @@ def create_uni_excel(sheet_name, time_list):
 
     return wbk
 
-timeArray = time.localtime(time.time())
-otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
+def parseExcel(dir, mandict):
+	if not checkexcel(dir):             #base check for data
+		exit()
+
+	global row_index
+	book = xlrd.open_workbook(dir)
+	sheet = book.sheet_by_index(0)
+	for i in range(3, sheet.nrows):
+		if sheet.cell_value(i, 4) != "":
+			type = re.findall(r'[0-9]{1,2}', sheet.cell_value(i, 4))
+		if sheet.ncols >= 19 and sheet.cell_value(i,18) != "" and sheet.cell_value(i, 12) != "ZZF" \
+			and sheet.cell_value(i, 12) != "test_zzf"  \
+			and sheet.cell_value(i, 12) != "test_zbr" \
+			and (type[0] == u"0" or type[0] == u"1" or type[0] == u"16" or type[0] == u"7" or type[0] == u"2" \
+			or type[0] == u"8" or type[0] == u"9" or type[0] == u"3" or type[0] == u"4" or type[0] == u"6" \
+			or type[0] == u"5" or type[0] == u"11" or type[0] == u"10"):
+			eo = excelobject()
+			eo.handletype = sheet.cell_value(i, 1)
+			eo.form = dict[type[0]]
+			eo.upman = sheet.cell_value(i, 12).lower()
+			#eo.time = time.strftime("%Y-%m-%d",time.strptime(sheet.cell_value(i, 15), '%Y-%m-%d'))
+			ti = os.path.split(dir)[1].replace('.xls', '').split('(')[0]
+			eo.time = time.strftime("%Y-%m-%d",time.strptime(ti[ti.find('_')+1:], '%Y_%m_%d'))
+			timeset.add(int(eo.time.replace("-", "")))
+			isheet3.write(row_index, 0, eo.handletype, n_style)
+			isheet3.write(row_index, 1, eo.form, n_style)
+			isheet3.write(row_index, 2, eo.upman, n_style)
+			isheet3.write(row_index, 3, eo.time, n_style)
+			isheet3.write(row_index, 4, "1", n_style)
+			row_index += 1
+			if eo.upman in mandict:
+				if eo.handletype in mandict[eo.upman]:
+					if eo.form in mandict[eo.upman][eo.handletype]:
+						if eo.time in mandict[eo.upman][eo.handletype][eo.form]:
+							mandict[eo.upman][eo.handletype][eo.form][eo.time] += 1
+						else:
+						   mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
+					else:
+						mandict[eo.upman][eo.handletype][eo.form] = {}
+						mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
+				else:
+					mandict[eo.upman][eo.handletype] = {}
+					mandict[eo.upman][eo.handletype][eo.form] = {}
+					mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
+			else:
+				mandict[eo.upman] = {}
+				mandict[eo.upman][eo.handletype] = {}
+				mandict[eo.upman][eo.handletype][eo.form] = {}
+				mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
 
 
-wbk = xlwt.Workbook(encoding='utf-8', style_compression=0)
-isheet1 = wbk.add_sheet(sheet1_name, cell_overwrite_ok=True)
-isheet2 = wbk.add_sheet(sheet2_name, cell_overwrite_ok=True)
-isheet3 = wbk.add_sheet(sheet3_name, cell_overwrite_ok=True)
+
 
 #header style setting
 header_style = xlwt.XFStyle()
@@ -162,61 +224,13 @@ n_style.alignment = alignment
 
 
 
-r1 = re.compile('.xls|.xlsx')
-path = unicode(dir,  "utf8")
 row = 0
 alllist = []
 timeset = set()
 accountset = set()
 mandict = {}
-row_index = 1
-for dir in os.listdir(path):
-    if r1.search(dir):
-        if not checkexcel(path + dir):             #base check for data
-            exit()
-        book = xlrd.open_workbook(path + dir)
-        sheet = book.sheet_by_index(0)
-        for i in range(3, sheet.nrows):
-            if sheet.cell_value(i, 4) != "":
-                type = re.findall(r'[0-9]{1,2}', sheet.cell_value(i, 4))
-            if sheet.ncols >= 19 and sheet.cell_value(i,18) != "" and sheet.cell_value(i, 12) != "ZZF" \
-                and sheet.cell_value(i, 12) != "test_zzf"  \
-			    and sheet.cell_value(i, 12) != "test_zbr" \
-			    and (type[0] == u"0" or type[0] == u"1" or type[0] == u"16" or type[0] == u"7" or type[0] == u"2" \
-			    or type[0] == u"8" or type[0] == u"9" or type[0] == u"3" or type[0] == u"4" or type[0] == u"6" \
-                or type[0] == u"5" or type[0] == u"11" or type[0] == u"10"):
-                eo = excelobject()
-                eo.handletype = sheet.cell_value(i, 1)
-                eo.form = dict[type[0]]
-                eo.upman = sheet.cell_value(i, 12).lower()
-                eo.time = time.strftime("%Y-%m-%d",time.strptime(sheet.cell_value(i, 15), '%Y-%m-%d'))
-                timeset.add(int(eo.time.replace("-", "")))
-                isheet3.write(row_index, 0, eo.handletype, n_style)
-                isheet3.write(row_index, 1, eo.form, n_style)
-                isheet3.write(row_index, 2, eo.upman, n_style)
-                isheet3.write(row_index, 3, eo.time, n_style)
-                isheet3.write(row_index, 4, "1", n_style)
-                row_index += 1
-                if eo.upman in mandict:
-                    if eo.handletype in mandict[eo.upman]:
-                        if eo.form in mandict[eo.upman][eo.handletype]:
-                            if eo.time in mandict[eo.upman][eo.handletype][eo.form]:
-                                mandict[eo.upman][eo.handletype][eo.form][eo.time] += 1
-                            else:
-                               mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
-                        else:
-                            mandict[eo.upman][eo.handletype][eo.form] = {}
-                            mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
-                    else:
-                        mandict[eo.upman][eo.handletype] = {}
-                        mandict[eo.upman][eo.handletype][eo.form] = {}
-                        mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
-                else:
-                    mandict[eo.upman] = {}
-                    mandict[eo.upman][eo.handletype] = {}
-                    mandict[eo.upman][eo.handletype][eo.form] = {}
-                    mandict[eo.upman][eo.handletype][eo.form][eo.time] = 1
 
+walkdir(dir, r'pnd|caiji', parseExcel, mandict)
 
 
 #sheet1  making
@@ -350,6 +364,9 @@ isheet3.col(2).width = 3600
 isheet3.col(3).width = 3600
 isheet3.col(4).width = 3600
 
+
+if not os.path.exists(save_dir):
+	os.mkdir(save_dir)
 
 wbk.save(outputfile)
 

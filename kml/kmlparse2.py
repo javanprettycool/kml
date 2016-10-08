@@ -5,7 +5,6 @@ from pykml.factory import ATOM_ElementMaker as ATOM
 from pykml.factory import GX_ElementMaker as GX
 from pykml import parser
 from placemark import placemark
-from pyexcel import createXls
 import re
 import xlwt
 import sys
@@ -260,7 +259,7 @@ def parse_pnd(path, operator_name="test_zzf"):
                             name = node.text.replace("-", "_")
                             pm.dogtype = "new"                                      #操作员手动新增的点
                             #pm.id = name.split("_")[1][:-1]
-                            pm.handletype = "1"
+                            pm.handletype = 1
                             #pm.match = name.split("_")[3][1:-1]
                             pm.form = name.split("_")[0]
                             pm.speedlimit = name.split("_")[1]
@@ -317,6 +316,7 @@ def parse_caiji(path, operator_name="test_zzf"):
                             pm.form = node.text.split("_")[4].split("(")[1].split(")")[0]
                             pm.speedlimit = node.text.split("_")[6][2:]
                             pm.account = node.text.split("@")[1][0:-12]
+                            pm.match = node.text.split("{")[1].split("}")[0]
                             handle_list.append(pm)
                         elif node.text[1] == u"狗":
                             pm.dogtype = "server"
@@ -330,7 +330,7 @@ def parse_caiji(path, operator_name="test_zzf"):
                                 name = node.text.replace("-", "_")
                                 pm.dogtype = "new"                                      #操作员手动新增的点
                                 #pm.id = name.split("_")[1][:-1]
-                                pm.handletype = "1"
+                                pm.handletype = 1
                                 #pm.match = name.split("_")[3][1:-1]
                                 pm.form = name.split("_")[0]
                                 pm.speedlimit = name.split("_")[1]
@@ -403,16 +403,16 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                                 pm.longitude = float("%.6f" % float(part[0]))
                                 pm.latitude = float("%.6f" % float(part[1]))
 
-                    if node.tag == '{0}LineString'.format(namespace):
-                        for data in node.getchildren():
-                            if data.tag == '{0}coordinates'.format(namespace):
-                                part = data.text.strip(",0 \n").split(",0 ")
-                                tmp = []
-                                for i, p in enumerate(part):
-                                    lon = float("%.6f" % float(p.split(',')[0]))
-                                    la = float("%.6f" % float(p.split(',')[1]))
-                                    tmp.append([lon, la])
-                                rectangle_list.append(tmp)
+                    # if node.tag == '{0}LineString'.format(namespace):
+                    #     for data in node.getchildren():
+                    #         if data.tag == '{0}coordinates'.format(namespace):
+                    #             part = data.text.strip(",0 \n").split(",0 ")
+                    #             tmp = []
+                    #             for i, p in enumerate(part):
+                    #                 lon = float("%.6f" % float(p.split(',')[0]))
+                    #                 la = float("%.6f" % float(p.split(',')[1]))
+                    #                 tmp.append([lon, la])
+                    #             rectangle_list.append(tmp)
         if not list:
             print "no data today"
             return
@@ -487,7 +487,7 @@ def parse_gd(path, filename="tt", date="", operator_name=u"张志锋"):
 
         if not list:
             print "no data today"
-            return
+            return []
 
         handle_list = [x for x in list]
         # for p in handle_list:

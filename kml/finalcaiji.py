@@ -9,7 +9,7 @@ import kmlparse2
 from lonlat_util import *
 from process import *
 
-date = "2016_08_17"
+date = "2016_09_30"
 year = date.split('_')[0]
 month = date.split('_')[1]
 day = date.split('_')[2]
@@ -28,11 +28,9 @@ dog_list = []
 #list, handle_list, dog_list = kmlparse2.parse_pnd(path, "test_zbr")
 list, handle_list, dog_list = kmlparse2.parse_caiji(path, "test_zzf")
 
-
 pmlist = proc_mod(list, id_for_fee, original_dog_list, dog_list, "test_zzf")
+
 print len(handle_list), len(pmlist)
-
-
 
 
 #createXls(pmlist, dir, "pnd_2016_03_30(7)", "2016-03-30", u"张宝茹")

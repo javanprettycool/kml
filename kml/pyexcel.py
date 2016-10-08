@@ -49,9 +49,9 @@ formdict = {"0":u"0闯红灯照相",
     "35":u"35检查站"}
 
 handletypedict = {
-    "1":u"1新增",
-    "2":u"2修改",
-    "3":u"3删除"
+    placemark.HANDLE_ADD : u"1新增",
+    placemark.HANDLE_UPDATE : u"2修改",
+    placemark.HANDLE_DELETE : u"3删除"
 }
 
 
@@ -138,6 +138,9 @@ def createXls(datalist, dir, filename="test", date="", operator_name=u"张志锋
     if not datalist:
         print u"生成excel中没有数据"
         return
+
+    err_list = []
+
     file = xlwt.Workbook()
     timeArray = time.localtime(time.time())
     otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
@@ -147,10 +150,10 @@ def createXls(datalist, dir, filename="test", date="", operator_name=u"张志锋
 
     i = 3
     for pm in datalist:
-        if checkForList(pm):
+        if checkForList(pm) > 0:
             table.write(i, 1, gethandletype(pm.handletype))
             table.write(i, 2, pm.id)
-            table.write(i, 3, pm.match if pm.handletype != '1' else '')
+            table.write(i, 3, pm.match if pm.handletype != placemark.HANDLE_ADD else '')
             table.write(i, 4, getform(pm.form) if getform(pm.form) else pm.form)
             table.write(i, 5, "%.6f" % pm.longitude)
             table.write(i, 6, "%.6f" % pm.latitude)
@@ -161,9 +164,18 @@ def createXls(datalist, dir, filename="test", date="", operator_name=u"张志锋
             table.write(i, 14, operator_name)
             table.write(i, 15, date)
             table.write(i, 18, pm.cost)
+        elif checkForList(pm) == -1:
+            err_list.append(pm)
         else:
+            print u"系统错误"
             sys.exit()
         i += 1
+    if err_list:
+        print u"检查表中没有匹配到的的点(匹配为?):"
+        for e in err_list:
+            print e.name
+        #sys.exit()
+
     file.save(dir+"/"+filename+".xls")
 
 def createXlsForDel(dataSet, filename="test"):
@@ -298,23 +310,22 @@ def getform(num):
 
 def gethandletype(num):
     global handletypedict
-    if num is "":
+    if num == "":
         return None
     return handletypedict[num]
 
 
 def checkForList(pm):
     if isinstance(pm, placemark):
-        if pm.handletype == "2" or pm.handletype == "3":
+        if pm.handletype == placemark.HANDLE_UPDATE or pm.handletype == placemark.HANDLE_DELETE:
             if pm.match == "?" or pm.match == "":
-                print u"没有匹配的点(匹配为?)：" + pm.name
-                return False
+                return -1    #没有匹配的点(匹配为?)
             else:
-                return True
+                return 1
         else:
-            return True
+            return 1
     else:
-        return False
+        return -2    #对象错误
 
 def create_kml_from_excel(path , filename):
 

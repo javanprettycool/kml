@@ -181,7 +181,7 @@ def proc_update(list, doglist, offset=20):
 						min_dis = distance
 						dog_shadow = [dog.id, dog.longitude, dog.latitude, dog.heading, dog.account]
 		if dog_shadow:
-			p.name = p.name if p.match != "?" else p.name.replace("?", dog_shadow[0])
+			p.name = p.name.replace("?", dog_shadow[0]) if p.match == "?" else p.name.split("{")[0]+"{"+dog_shadow[0]+"}"+p.name.split("}")[1]
 			p.match = dog_shadow[0]
 			p.longitude = dog_shadow[1]
 			p.latitude = dog_shadow[2]
@@ -213,16 +213,16 @@ def proc_add(list, doglist, distance=50, offset=20):
 					else:
 						if str(p.account).lower() == str(dog.account).lower():
 							p.change_match(dog)
+							p.need_to_pay = False
 						else:
 							p.change_match(dog)
-							p.need_to_pay = True
 			else:                 #新增类型不相同,扩大匹配距离
 				if check_match(p, dog, distance, offset) and dog.form != "27":  #不匹配27加油站
 					if str(p.account).lower() == str(dog.account).lower():   #比较是否是同一个采集员
 						p.change_match(dog)
+						p.need_to_pay = False
 					else:
 						p.change_match(dog)
-						p.need_to_pay = True
 
 	fee_id = None       #返回需要计费的id，一组取一个
 	for p in list:
@@ -264,7 +264,7 @@ def operate(list, dir, dog_list):
 		os.makedirs(dir)
 
 
-	#最后检测一下
+	#最后检测一下重复
 	distance = 50
 	offset = 20
 	new_list = [x for j in result for x in j]
@@ -273,7 +273,7 @@ def operate(list, dir, dog_list):
 	while i < len(new_list):
 		j = i + 1
 		p1 = new_list[i]
-		while j <len(new_list):
+		while j < len(new_list):
 			p2 = new_list[j]
 			if p1.cmp(p2):
 				if p1.handletype == p2.handletype:
@@ -298,6 +298,11 @@ def operate(list, dir, dog_list):
 
 def handle(handle_type, handle_list, dog_list, fee_id=None):
 	to_type = int(handle_type)
+
+	if len(handle_list) == 3:   #对于三方向的点修正
+		mid_point = handle_list[-1]
+		mid_point.heading = (mid_point.heading + 180) % 360
+
 	if to_type == placemark.HANDLE_ADD:
 		fee_id = add(handle_list ,dog_list)
 	elif to_type == placemark.HANDLE_UPDATE:
@@ -380,11 +385,11 @@ def createElement(operate, dog, operator_name):
 	pm = placemark()
 
 	if operate == "add":
-		pm.handletype = "1"
+		pm.handletype = placemark.HANDLE_ADD
 	elif operate == "update":
-		pm.handletype = "2"
+		pm.handletype = placemark.HANDLE_UPDATE
 	elif operate == "delete":
-		pm.handletype = "3"
+		pm.handletype = placemark.HANDLE_DELETE
 
 	pm.form = dog.form
 	pm.match = dog.id

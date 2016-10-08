@@ -11,7 +11,7 @@ import zipfile
 
 EXT = ".kml"
 
-date = "2016_09_01"  #改这个
+date = "2016_09_29"  #改这个
 
 year = date.split('_')[0]
 month = date.split('_')[1]

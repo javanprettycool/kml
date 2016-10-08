@@ -1,5 +1,6 @@
 #coding=utf-8
 __author__ = 'Javan'
+import re
 
 class placemark(object):
 
@@ -45,7 +46,7 @@ class placemark(object):
 
     scale = []    #存放周围的点
     match_each = None
-    need_to_pay = False
+    need_to_pay = True
 
     HANDLE_ADD = 1   #处理类型
     HANDLE_UPDATE = 2
@@ -129,17 +130,16 @@ class placemark(object):
 
     def change_handletype(self, change_to):
         type = int(change_to)
-        name = None
+        name = self.name
+
         if type == self.HANDLE_UPDATE:
-            name = u"[采集ID_" + str(self.id) + u"]_2修改_{" + self.match + u"}_(" + self.form + u")_角度" + str(self.heading) + u"_限速" + str(self.speedlimit) + u"用户(" + self.account + u")采集@" + self.create_time
-        elif type == self.HANDLE_ADD:
-            name = u"[采集ID_" + str(self.id) + u"]_1新增_{}_(" + self.form + u")_角度" + str(self.heading) + u"_限速" + str(self.speedlimit) + u"用户(" + self.account + u")采集@" + self.create_time
+           self.name = name.replace(u"1新增", u"2修改")
         elif type == self.HANDLE_DELETE:
-            name = u"[采集ID_" + str(self.id) + u"]_3删除_{" + self.match + u"}_(" + self.form + u")_角度" + str(self.heading) + u"_限速" + str(self.speedlimit) + u"用户(" + self.account + u")采集@" + self.create_time
-        return name
+            self.name = name.replace(u"1新增", u"3删除")
 
     def cmp(self, pm):
-        if self.latitude == pm.latitude and self.longitude == pm.longitude:
+        if self.latitude == pm.latitude and self.longitude == pm.longitude  \
+            and ( pm.heading-10 < self.heading < pm.heading+10 or self.heading-10 < pm.heading < self.heading+10):
             return True
         return False
 
@@ -150,7 +150,7 @@ class placemark(object):
         self.latitude = dog.latitude
         self.heading = dog.heading
         self.match = dog.id
-        self.name = self.change_handletype(placemark.HANDLE_UPDATE)
+        self.change_handletype(placemark.HANDLE_UPDATE)
 
 class rectangle(object):
     pass

@@ -7,28 +7,37 @@ import kmlparse2
 from process import *
 #from fuckgd import check_match
 
+# def test(a, callback, *avg):
+# 	print a
+# 	callback(*avg)
+#
+#
+# def gg(*a):
+# 	for s in a:
+# 		print s
+#
+# test('test', gg, 'gg', 'haha')
+# exit()
+#
+# def walkdir(dir, pattern):
+# 	for f in os.listdir(dir):
+# 		d = os.path.join(dir, f)
+# 		if os.path.isfile(d) and re.match(pattern, f):
+# 			yield d
+# 		elif os.path.isdir(d):
+# 			walkdir(d, pattern)
+#
+# for p in walkdir(path, r"pnd|caiji"):
+# 	print p
+# exit()
 
 
-gd = placemark()
-ob = placemark()
 
-gd.longitude = 114.215440
-gd.latitdue = 22.604880
-gd.heading = 326
-ob.longitude = 114.216000
-ob.latitdue = 22.605160
-ob.heading =
-
-print getDist2(gd.longitude,gd.latitude,ob.longitude,ob.latitude)
-#print check_match(gd, ob, 100, 20, True)
-
-
-exit()
-
-
-
-dir = u"F:\dataD\高速\G25长深高速4\G25长深高速4.xls"
+dir = u"F:\dataD\高速\G25长深高速4\caiji_2016_09_01(1).xls"
 #path = unicode(dir,  "utf8")
+a = os.path.split(dir)[1].replace('.xls', '').split('(')[0]
+print a[a.find('_')+1:]
+exit()
 
 filename = u"G25长深高速4_test"
 
