@@ -382,8 +382,8 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                             pm.name = node.text
                             pm.dogtype = "server"
                             pm.match = node.text.split("_")[0][1:] + "," + node.text.split("_")[1][:-1] + "," + node.text.split("_")[2].split("-")[0][3:-1]
-                            pm.id = pm.match
-                            pm.handletype = "2"
+                            pm.id = ''
+                            pm.handletype = 2
                             pm.form = node.text.split("_")[2].split("-")[1][5:-1]
                             pm.transforForm()
                             pm.account = "test_zzf"
@@ -403,16 +403,16 @@ def parse_ts(path, filename="tt", date="", operator_name=u"张志锋"):
                                 pm.longitude = float("%.6f" % float(part[0]))
                                 pm.latitude = float("%.6f" % float(part[1]))
 
-                    # if node.tag == '{0}LineString'.format(namespace):
-                    #     for data in node.getchildren():
-                    #         if data.tag == '{0}coordinates'.format(namespace):
-                    #             part = data.text.strip(",0 \n").split(",0 ")
-                    #             tmp = []
-                    #             for i, p in enumerate(part):
-                    #                 lon = float("%.6f" % float(p.split(',')[0]))
-                    #                 la = float("%.6f" % float(p.split(',')[1]))
-                    #                 tmp.append([lon, la])
-                    #             rectangle_list.append(tmp)
+                    if node.tag == '{0}LineString'.format(namespace):
+                        for data in node.getchildren():
+                            if data.tag == '{0}coordinates'.format(namespace):
+                                part = data.text.strip(",0 \n").split(",0 ")
+                                tmp = []
+                                for i, p in enumerate(part):
+                                    lon = float("%.6f" % float(p.split(',')[0]))
+                                    la = float("%.6f" % float(p.split(',')[1]))
+                                    tmp.append([lon, la])
+                                rectangle_list.append(tmp)
         if not list:
             print "no data today"
             return

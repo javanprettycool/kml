@@ -186,8 +186,9 @@ def proc_update(list, doglist, offset=20):
 			p.longitude = dog_shadow[1]
 			p.latitude = dog_shadow[2]
 			p.heading = dog_shadow[3]
-			if p.account.lower() != dog_shadow[4].lower():
-				p.need_to_pay = True
+
+			if p.account.lower() == dog_shadow[4].lower():  #防止重复采集人员费用
+				p.need_to_pay = False
 
 	fee_id = None
 	for p in list:
