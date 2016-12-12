@@ -584,6 +584,34 @@ def parse_ts_from_device(path, filename="tt", date="", operator_name=u"张志锋
         # createXls(list, dir, filename, date, operator_name)
         return list;
 
+def parse_linestring(path):
+        list = []
+        tree = etree.parse(path)
+        namespace = get_namespace(tree.getroot())
+        for elem in tree.getroot().iter():
+            if elem.tag == '{0}Placemark'.format(namespace):
+                pm = placemark()
+                for node in elem.getchildren():
+                    if node.tag == '{0}name'.format(namespace):
+                        if node.text == u"未命名路径":  #去除未命名路径
+                            continue
+                        else:
+                            pm.name = node.text
+                            continue
+                    if node.tag == '{0}LineString'.format(namespace):
+                        pm.track_list = []
+                        for data in node.getchildren():
+                            if data.tag == '{0}coordinates'.format(namespace):
+                                part = data.text.strip("\t\t\t\t\t").strip(",0 \n").split(",0 ")
+                                tmp = []
+                                for i, p in enumerate(part):
+                                    lon = float("%.6f" % float(p.split(',')[0]))
+                                    la = float("%.6f" % float(p.split(',')[1]))
+                                    tmp.append([lon, la])
+                                pm.track_list = tmp
+                if hasattr(pm, 'track_list'):
+                    list.append(pm)
+        return list
 
 def outputKml(handle_tuple, docname, fodername, dir, filename, segment=1):
     whole_pm_list = []

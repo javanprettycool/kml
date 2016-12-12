@@ -13,7 +13,7 @@ import re
 from pyexcel import excelobject
 from check import checkexcel
 
-month = 9
+month = 11
 year = 2016    #改这两个咯
 
 date = str(year) + u"年" + str(month) + u"月"

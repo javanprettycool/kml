@@ -250,9 +250,11 @@ def operate(list, dir, dog_list):
 			fee = handle(handle_type, handle_list, dog)    #返回算费用的点id,不算费用返回none
 			if fee:
 				id_for_fee_list.append(fee)     #这个必须在handle前面
-			result.append(handle_list)
+			if handle_list:           #处理过后的list不为None时
+				result.append(handle_list)
 			pre = p
 			handle_list = [p]
+
 
 	if len(handle_list) != 0:    #鏀跺熬
 		if len(handle_list) >= 1:
@@ -287,6 +289,7 @@ def operate(list, dir, dog_list):
 	for j in dul_list:
 		for q in result[:]:
 			j in q and q.remove(j)
+			break
 		j in id_for_fee_list and id_for_fee_list.remove(j)
 
 	#exit()
@@ -298,6 +301,7 @@ def operate(list, dir, dog_list):
 
 
 def handle(handle_type, handle_list, dog_list, fee_id=None):
+
 	to_type = int(handle_type)
 
 	if len(handle_list) == 3:   #对于三方向的点修正
@@ -310,6 +314,7 @@ def handle(handle_type, handle_list, dog_list, fee_id=None):
 		fee_id = update(handle_list, dog_list)
 	elif to_type == placemark.HANDLE_DELETE:
 		fee_id = delete(handle_list, dog_list)
+
 	return fee_id
 
 

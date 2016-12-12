@@ -11,7 +11,7 @@ import zipfile
 
 EXT = ".kml"
 
-date = "2016_10_06"  #改这个
+date = "2016_11_28"  #改这个
 
 year = date.split('_')[0]
 month = date.split('_')[1]
@@ -66,6 +66,23 @@ pm_list = []
 pnd_list, pnd_handle_list, pnd_dog_list = kmlparse2.parse_pnd(pnd_path)
 if len(pnd_handle_list) != 0:
     result_query = operate(pnd_handle_list, dir+"pnd/", pnd_dog_list)
+    _query = []
+    _tmp = []
+    for i in result_query[:]:
+        #print i
+        if not i:
+            print i
+            continue
+
+        if i[0].form == '1' and i[0].handletype == placemark.HANDLE_DELETE:
+            _query.insert(0, i)
+        elif i[0].form == '0':
+            _query.append(i)
+        else:
+            _tmp.append(i)
+
+    _query.extend(_tmp)
+    result_query = _query
     outputKml((pnd_list, result_query, pnd_dog_list), pnd_docname, pnd_fodername, dir+"pnd/", "new_"+pnd_filename+"_"+date[5:], 400)
     count = 0
     for q in result_query:

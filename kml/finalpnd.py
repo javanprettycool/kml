@@ -12,9 +12,9 @@ import time
 
 EXT = ".kml"
 
-date = "2016_10_06"  #改这个
+date = "2016_11_25"  #改这个
 
-filename = "4"
+filename = "3"
 
 year = date.split('_')[0]
 month = date.split('_')[1]
