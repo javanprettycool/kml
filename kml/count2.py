@@ -1,4 +1,3 @@
-
 #coding=utf-8
 
 
@@ -12,8 +11,8 @@ import xlwt
 import re
 from pyexcel import excelobject
 from check import checkexcel
-
-month = 11
+import MySQLdb
+month = 12
 year = 2016    #改这两个咯
 
 date = str(year) + u"年" + str(month) + u"月"
@@ -26,6 +25,18 @@ save_dir = u"F:/dataD/"+str(year)+u"/"+str(month)+u"月/"+date+u"采集费用补
 outputfile = save_dir + date + u"采集费用补贴日&月分析表.xls"
 account_file_path = u"F:/dataD/采集账号.xls"        #采集账号表                           #最后保存统计excel地址
 
+
+###############################连接mysql########################################
+
+db_host = '121.40.90.176'
+db_name = 'cddm'
+username = 'root'
+pwd = 'fiabbshkhkQKBT#&#WEWFJJssd'
+port = 3306
+
+db = MySQLdb.connect(db_host, username, pwd, db_name, port=port, charset='utf8')
+
+################################################################################
 
 timeArray = time.localtime(time.time())
 otherStyleTime = time.strftime("%Y-%m-%d", timeArray)
@@ -513,8 +524,9 @@ for t in range(3, sheet.ncols):
 	date_list.append(sheet.cell_value(0, t))
 	day += 1
 
-
-detail = parse_account(account_file_path)
+cursor = db.cursor()
+cursor.execute('select * from cddm_account')  #获取采集账号信息
+detail = cursor.fetchall()
 for i in range(1, sheet.nrows):
 	if sheet.cell_value(i, 0) == u"总计（费用）":
 		break
@@ -528,9 +540,9 @@ for i in range(1, sheet.nrows):
 				catch = 1
 				break
 			if account.lower() == row[1] or account.upper() == row[1]:
-				company = row[0]
-				name = row[2]
-				isChanging = u"(不计费)" if row[6] else u""
+				company = row[7]
+				name = row[6]
+				isChanging = u"(不计费)" if not row[4] else u""
 				catch = 1
 				break
 

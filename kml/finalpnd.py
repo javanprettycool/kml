@@ -12,7 +12,7 @@ import time
 
 EXT = ".kml"
 
-date = "2016_11_25"  #改这个
+date = "2017_01_02"  #改这个
 
 filename = "3"
 

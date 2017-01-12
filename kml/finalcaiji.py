@@ -9,7 +9,7 @@ import kmlparse2
 from lonlat_util import *
 from process import *
 
-date = "2016_11_23"
+date = "2017_01_09"
 year = date.split('_')[0]
 month = date.split('_')[1]
 day = date.split('_')[2]

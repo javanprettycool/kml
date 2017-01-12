@@ -11,7 +11,7 @@ import zipfile
 
 EXT = ".kml"
 
-date = "2016_11_28"  #改这个
+date = "2017_01_09"  #改这个
 
 year = date.split('_')[0]
 month = date.split('_')[1]
@@ -64,6 +64,12 @@ pm_list = []
 
 #pnd
 pnd_list, pnd_handle_list, pnd_dog_list = kmlparse2.parse_pnd(pnd_path)
+#
+# for p in pnd_handle_list[:]:
+#     if p.id < 124836:
+#         print p.id
+#         pnd_handle_list.remove(p)
+
 if len(pnd_handle_list) != 0:
     result_query = operate(pnd_handle_list, dir+"pnd/", pnd_dog_list)
     _query = []

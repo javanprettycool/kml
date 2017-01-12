@@ -13,8 +13,8 @@ import re
 from pyexcel import excelobject
 from check import checkexcel
 
-sheet1_name = "2016年9月份采集费用补贴（日）统计表"
-sheet2_name = "2016年9月份采集费用补贴（月）统计表"
+sheet1_name = "2016年12月份采集费用补贴（日）统计表"
+sheet2_name = "2016年12月份采集费用补贴（月）统计表"
 sheet3_name = "9月份需补贴采集数据"
 dir = "E:/count/"                       #当月所有文件
 outputfile = u"E:/test/2016年9月采集费用补贴日&月分析表.xls"
