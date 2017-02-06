@@ -8,10 +8,12 @@ from process import *
 from kmlparse2 import *
 import os,sys
 import zipfile
+import time
 
 EXT = ".kml"
 
-date = "2017_01_09"  #改这个
+#date = "2017_01_14"  #改这个
+date = time.strftime('%Y_%m_%d', time.localtime(time.time()-24*60*60))
 
 year = date.split('_')[0]
 month = date.split('_')[1]
@@ -112,8 +114,8 @@ if len(caiji_handle_list) != 0:
 else:
     print u"没有caiji数据"
 
-
-
+#打开文件夹
+os.startfile(dir)
 
 
 

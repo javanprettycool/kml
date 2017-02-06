@@ -9,7 +9,7 @@ import kmlparse2
 from lonlat_util import *
 from process import *
 
-path = u"F:/dataD/投诉/处理/0913投诉/矩形txt-09月-22日-2016-S212_安仁县到郴州60改80_1026_tt_0922.kml"
+path = u"E:/qq/357500663/FileRecv/京藏高速该路段限速110KMh_tt_0116.kml"
 path = path.replace("\\","/")
 
 
@@ -26,8 +26,8 @@ for p in list_tt:
     #         p.speedlimit = 70
     #         list.append(p)
 
-    if p.form == u"1测速照相" and p.speedlimit <= 70:
-        p.speedlimit = 70
+    if (p.form == u"1测速照相" or p.form == u"7高清摄像") and p.speedlimit !=110:
+        p.speedlimit = 110
         # if p.form == u"违规稽查" or p.form == u"事故多发" or p.form == u"禁止掉头":
         #     continue
         # elif p.form == u"红灯":
@@ -52,7 +52,6 @@ filename = "tousu"
 
 dir = "e:/"
 
-date = "2016-09-23"
 
 createXlsForUpdate(list, filename)
 

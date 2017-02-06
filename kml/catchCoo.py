@@ -9,6 +9,8 @@ from lonlat_util import *
 import re
 
 
+#简单爬违章数据
+
 query = urllib.quote("大鹏新区/全部/")
 
 url = "http://szjj.u-road.com/szjjpro/index.php?/infoquery/robotpolicequery/robotListShow/" + query
